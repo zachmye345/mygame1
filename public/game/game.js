@@ -1710,7 +1710,23 @@ for(let i=0;i<3;i++){
 
 
 
-let playerHP = 6;
+const MAX_PLAYER_HP = 6;
+const MONSTER_CONTACT_DAMAGE = {
+  monct0: 1,
+  monct1: 1,
+  monct2: 1,
+  monct3: 2,
+  monct4: 2,
+  monct5: 2,
+  monct6: 2,
+  monct7: 3,
+  arena: 1,
+};
+const MONSTER_SPECIAL_DAMAGE = {
+  monct1: 1,
+};
+
+let playerHP = MAX_PLAYER_HP;
 let coins = Number(localStorage.getItem("money")) || 0;
 
 // 🔥 ДОБАВЬ ЭТО
@@ -1729,6 +1745,45 @@ setTimeout(() => {
 
 // 👇 дальше твой код
 let startHP = playerHP;
+
+function renderPlayerHearts() {
+  const heartsBox = document.querySelector(".hearts");
+
+  if (!heartsBox) {
+    return;
+  }
+
+  heartsBox.innerHTML = "";
+
+  for (let i = 0; i < playerHP; i++) {
+    const heart = document.createElement("img");
+    heart.src = "../images/stam111.png";
+    heart.className = "heart";
+    heartsBox.appendChild(heart);
+  }
+}
+
+function getMonsterDamage(monsterId, attackType = "contact") {
+  if (attackType === "special") {
+    return MONSTER_SPECIAL_DAMAGE[monsterId] || MONSTER_CONTACT_DAMAGE[monsterId] || 1;
+  }
+
+  return MONSTER_CONTACT_DAMAGE[monsterId] || 1;
+}
+
+function damagePlayer(amount) {
+  playerHP = Math.max(0, playerHP - amount);
+  renderPlayerHearts();
+  return playerHP;
+}
+
+function healPlayer(amount = 1) {
+  playerHP = Math.min(MAX_PLAYER_HP, playerHP + amount);
+  renderPlayerHearts();
+  return playerHP;
+}
+
+renderPlayerHearts();
 
 function monsterSpawnDelay(delay) {
   return Math.max(800, Math.floor(delay * 0.8));
@@ -1777,7 +1832,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
+  const contactDamage = getMonsterDamage("monct0");
 
   // движение и атака
   setInterval(() => {
@@ -1828,15 +1883,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -2028,25 +2075,8 @@ setInterval(() => {
     ){
 
       heart.remove();
-
-      if(playerHP < 6){
-        playerHP++;
-
-        let heartsBox = document.querySelector(".hearts");
-
-        // полностью перерисовать HP
-        heartsBox.innerHTML = "";
-
-        for(let i = 0; i < playerHP; i++){
-
-          let hp = document.createElement("img");
-          hp.src = "../images/stam111.png";
-          hp.className = "heart";
-
-          heartsBox.appendChild(hp);
-
-        }
-
+      if(playerHP < MAX_PLAYER_HP){
+        healPlayer();
       }
 
     }
@@ -2115,15 +2145,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-
-  // берём HP игрока, если он уже есть в игре
-  let currentPlayerHP = (typeof playerHP !== "undefined") ? playerHP : 6;
-
-  function syncPlayerHP(){
-    if(typeof playerHP !== "undefined"){
-      playerHP = currentPlayerHP;
-    }
-  }
+  const contactDamage = getMonsterDamage("monct1");
 
   // ==========================
   // 💥 ВЗРЫВ
@@ -2210,17 +2232,7 @@ setTimeout(() => {
 
         clearInterval(fireInterval);
         fire.remove();
-
-        let hearts = document.querySelectorAll(".heart");
-
-        if(currentPlayerHP > 0){
-          currentPlayerHP--;
-          syncPlayerHP();
-
-          if(hearts[currentPlayerHP]){
-            hearts[currentPlayerHP].remove();
-          }
-        }
+      damagePlayer(contactDamage);
 
         let playerEl = getPlayerCollisionTarget();
         if(playerEl){
@@ -2230,7 +2242,7 @@ setTimeout(() => {
           }, 200);
         }
 
-        if(currentPlayerHP <= 0 && !window.gameOver){
+        if(playerHP <= 0 && !window.gameOver){
 
           deaths++;
           localStorage.setItem("death", deaths);
@@ -2322,15 +2334,8 @@ setTimeout(() => {
       ){
         heart.remove();
 
-        if(currentPlayerHP < 6){
-          currentPlayerHP++;
-          syncPlayerHP();
-
-          let hp = document.createElement("img");
-          hp.src = "../images/stam111.png";
-          hp.className = "heart";
-
-          document.querySelector(".hearts").appendChild(hp);
+        if(playerHP < MAX_PLAYER_HP){
+          healPlayer();
         }
       }
 
@@ -2406,17 +2411,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
     player.style.filter = "";
   },200);
 
-  let hearts = document.querySelectorAll(".heart");
-
-  // защита от багов
-  if(typeof playerHP !== "undefined" && playerHP > 0){
-
-    playerHP--;
-
-    if(hearts[playerHP]){
-      hearts[playerHP].remove();
-    }
-  }
+  damagePlayer(contactDamage);
 
   // смерть игрока
   if(typeof playerHP !== "undefined" && playerHP <= 0 && !window.gameOver){
@@ -2531,7 +2526,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
         console.log("Монстр убит");
 
         // награда в коинах
-        let lostHP = startHP - currentPlayerHP;
+        let lostHP = startHP - playerHP;
         let reward = 0;
 
         if(lostHP === 0){
@@ -2644,7 +2639,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
+  const contactDamage = getMonsterDamage("monct2");
 
   // движение и атака
   setInterval(() => {
@@ -2695,15 +2690,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -2886,14 +2873,8 @@ setInterval(() => {
 
       heart.remove();
 
-       if(playerHP < 6){
-        playerHP++;
-
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
+       if(playerHP < MAX_PLAYER_HP){
+        healPlayer();
       }
 
     }
@@ -2964,7 +2945,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
+  const contactDamage = getMonsterDamage("monct3");
 
   // движение и атака
   setInterval(() => {
@@ -3015,15 +2996,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3204,16 +3177,8 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
+      if(playerHP < MAX_PLAYER_HP){
+        healPlayer();
       }
 
     }
@@ -3286,7 +3251,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
+  const contactDamage = getMonsterDamage("monct4");
 
   // движение и атака
   setInterval(() => {
@@ -3337,15 +3302,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3526,16 +3483,8 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
+      if(playerHP < MAX_PLAYER_HP){
+        healPlayer();
       }
 
     }
@@ -3607,7 +3556,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
+  const contactDamage = getMonsterDamage("monct5");
 
   // движение и атака
   setInterval(() => {
@@ -3658,15 +3607,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3847,16 +3788,8 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
+      if(playerHP < MAX_PLAYER_HP){
+        healPlayer();
       }
 
     }
@@ -3929,7 +3862,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
+  const contactDamage = getMonsterDamage("monct6");
 
   // движение и атака
   setInterval(() => {
@@ -3980,15 +3913,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -4169,16 +4094,8 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
+      if(playerHP < MAX_PLAYER_HP){
+        healPlayer();
       }
 
     }
@@ -4250,7 +4167,7 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
+  const contactDamage = getMonsterDamage("monct7");
 
   // движение и атака
   setInterval(() => {
@@ -4301,15 +4218,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -4490,16 +4399,8 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
+      if(playerHP < MAX_PLAYER_HP){
+        healPlayer();
       }
 
     }
@@ -4965,7 +4866,7 @@ function createMonster() {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 3;
+  const contactDamage = getMonsterDamage("arena");
 
   setInterval(() => {
 
@@ -5013,15 +4914,7 @@ function createMonster() {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+      damagePlayer(contactDamage);
 
       if(playerHP <= 0){
         alert("Игрок проиграл");
