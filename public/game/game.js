@@ -506,10 +506,14 @@ function fitArenaViewport() {
     return;
   }
 
-  const scaleX = window.innerWidth / ARENA_BASE_WIDTH + 0.002;
-  const scaleY = window.innerHeight / ARENA_BASE_HEIGHT + 0.002;
+  const hudScale = Math.max(
+    0.64,
+    Math.min(window.innerWidth / ARENA_BASE_WIDTH, window.innerHeight / ARENA_BASE_HEIGHT, 1)
+  );
 
-  arenaViewport.style.transform = `translate(-50%, -50%) scale(${scaleX}, ${scaleY})`;
+  arenaViewport.style.width = `${window.innerWidth}px`;
+  arenaViewport.style.height = `${window.innerHeight}px`;
+  arenaViewport.style.setProperty("--hud-scale", hudScale.toFixed(4));
 }
 
 function getPlayerSize() {
@@ -525,18 +529,20 @@ function centerCamera() {
     return;
   }
 
+  const viewportWidth = arenaViewport?.clientWidth || window.innerWidth;
+  const viewportHeight = arenaViewport?.clientHeight || window.innerHeight;
   const playerSize = getPlayerSize();
   const playerCenterX = player_x + playerSize / 2;
   const playerCenterY = player_y + playerSize / 2;
-  const minCameraX = ARENA_BASE_WIDTH - MAP_WIDTH;
-  const minCameraY = ARENA_BASE_HEIGHT - MAP_HEIGHT;
+  const minCameraX = viewportWidth - MAP_WIDTH;
+  const minCameraY = viewportHeight - MAP_HEIGHT;
   const cameraX = Math.min(
     0,
-    Math.max(ARENA_BASE_WIDTH / 2 - playerCenterX, minCameraX)
+    Math.max(viewportWidth / 2 - playerCenterX, minCameraX)
   );
   const cameraY = Math.min(
     0,
-    Math.max(ARENA_BASE_HEIGHT / 2 - playerCenterY, minCameraY)
+    Math.max(viewportHeight / 2 - playerCenterY, minCameraY)
   );
 
   map.style.transform = `translate3d(${cameraX}px, ${cameraY}px, 0)`;

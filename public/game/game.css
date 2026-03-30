@@ -1,15 +1,16 @@
 #arenaViewport {
   display: none;
   position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 1700px;
-  height: 950px;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   background: #02060a;
-  transform: translate(-50%, -50%) scale(1);
-  transform-origin: center center;
+  transform: none;
+  transform-origin: top left;
   z-index: 1;
+  --hud-scale: 1;
 }
 
 .map {
@@ -144,10 +145,10 @@
 }
 .score_list {
   position: absolute;
-  width: 20%;
+  width: 320px;
   height: 280px;
-  top: 5%;
-  right: 2%;
+  top: 84px;
+  right: 24px;
   opacity: 0.7;
   border: #4b291f 4px solid;
   outline: #6b382a 4px solid;
@@ -157,6 +158,8 @@
   align-items: center;
   overflow-y: auto;
   overflow-x: hidden;
+  transform: scale(var(--hud-scale));
+  transform-origin: top right;
 }
 
 .sap {
@@ -167,10 +170,12 @@
   font-weight: bold;
   line-height: 50px;
   text-align: center;
-  top: 0%;
-  right: 4%;
+  top: 24px;
+  right: 24px;
   font-size: 2em;
   background-color: #4b291f;
+  transform: scale(var(--hud-scale));
+  transform-origin: top right;
 }
 .score_player {
   opacity: 1;
@@ -186,12 +191,13 @@
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  width: 90%;
-  height: 32%;
+  width: min(1100px, calc(100% - 260px));
+  height: 220px;
   position: absolute;
-  bottom: 5%;
+  bottom: 30px;
   left: 50%;
-  transform: translate(-50%);
+  transform: translateX(-50%) scale(var(--hud-scale));
+  transform-origin: bottom center;
 }
 #level_bar {
   width: 100%;
@@ -257,8 +263,8 @@
 }
 .money_score {
   position: absolute;
-  top: 0%;
-  left: 0%;
+  top: 24px;
+  left: 24px;
   padding: 15px;
   border: #4b291f 4px solid;
   outline: #6b382a 4px solid;
@@ -267,4 +273,6 @@
   font-size: 1.5em;
   font-weight: bold;
   opacity: 0.7;
+  transform: scale(var(--hud-scale));
+  transform-origin: top left;
 }
