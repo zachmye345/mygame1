@@ -241,7 +241,7 @@ let player_x = 0;
 let player_y = 0;
 let world = document.querySelector(".map");
 exit.addEventListener("click", () => {
-  window.close();
+  closeDesktopApp();
 });
 let asd = 0;
 setInterval(() => {
@@ -373,6 +373,27 @@ function unbindGameControls() {
   controlsBound = false;
 }
 
+function closeDesktopApp() {
+  fetch("/__quit_app__", { method: "POST" }).catch(() => {
+    // Fallback for non-Electron launch.
+  });
+  window.setTimeout(() => {
+    window.close();
+  }, 40);
+}
+
+function keepMonsterInsideMap(monster, currentX, currentY) {
+  const monsterSize =
+    monster.offsetWidth || parseFloat(monster.style.width) || 300;
+  const maxX = Math.max(0, MAP_WIDTH - monsterSize);
+  const maxY = Math.max(0, MAP_HEIGHT - monsterSize);
+
+  return {
+    x: Math.min(Math.max(currentX, 0), maxX),
+    y: Math.min(Math.max(currentY, 0), maxY),
+  };
+}
+
 window.addEventListener("resize", syncViewportLayout);
 syncViewportLayout();
 
@@ -393,7 +414,7 @@ start.addEventListener("click", () => {
     lvlprocent2 = 0;
     countForLvl = 0;
     rangeIncrease = 1;
-    start3 = 1;
+    start3 = 0;
     lvlprocent = 0;
     lvl = 1;
     level.textContent = lvl;
@@ -1204,6 +1225,7 @@ function setCharacteristics(lvl) {
 let beforeMenuBtn = document.querySelector(".menu-menu");
 beforeMenuBtn.addEventListener("click", () => {
   socket.emit("number");
+  start3 = 0;
   unbindGameControls();
   stopMovement();
   gamePaused = false;
@@ -1366,6 +1388,10 @@ setTimeout(() => {
       monsterX += (dx / distance) * speed;
       monsterY += (dy / distance) * speed;
     }
+
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
 
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
@@ -1933,6 +1959,10 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
+
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -2221,6 +2251,10 @@ setTimeout(() => {
       monsterX += (dx / distance) * speed;
       monsterY += (dy / distance) * speed;
     }
+
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
 
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
@@ -2535,6 +2569,10 @@ setTimeout(() => {
       monsterX += (dx / distance) * speed;
       monsterY += (dy / distance) * speed;
     }
+
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
 
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
@@ -2852,6 +2890,10 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
+
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -3166,6 +3208,10 @@ setTimeout(() => {
       monsterX += (dx / distance) * speed;
       monsterY += (dy / distance) * speed;
     }
+
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
 
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
@@ -3483,6 +3529,10 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
+
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -3797,6 +3847,10 @@ setTimeout(() => {
       monsterX += (dx / distance) * speed;
       monsterY += (dy / distance) * speed;
     }
+
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
 
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
@@ -4344,7 +4398,7 @@ if(load){
 // ==========================
 
 exitBtn.onclick = function(){
-  window.close();
+  closeDesktopApp();
 };
 
 
@@ -4377,6 +4431,7 @@ document.addEventListener("keydown", function(e){
 
 
 function startArenaTimer(){
+  start3 = 0;
   stopMovement();
   unbindGameControls();
   countdownActive = true;
@@ -4429,6 +4484,7 @@ function startArenaTimer(){
         countdownTimerId = null;
         countdownActive = false;
         gamePaused = false;
+        start3 = 1;
         if (map.style.display !== "none") {
           pauseBtn.style.display = "flex";
           bindGameControls();
@@ -4502,8 +4558,11 @@ function createMonster() {
       monsterY += (dy / distance) * speed;
     }
 
-   
- monster.style.left = monsterX + "px";
+    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
+    monsterX = boundedMonsterPosition.x;
+    monsterY = boundedMonsterPosition.y;
+
+    monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
     monsterHPText.style.left = monsterX + "px";

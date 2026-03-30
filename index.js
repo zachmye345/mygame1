@@ -139,6 +139,13 @@ function createServer() {
     }
 
     const pathname = decodeURIComponent(requestUrl.split("?")[0]);
+    if (pathname === "/__quit_app__") {
+      res.statusCode = 204;
+      res.end();
+      setImmediate(() => app.quit());
+      return;
+    }
+
     if (pathname === "/") {
       res.statusCode = 302;
       res.setHeader("Location", "/game/game.html");
