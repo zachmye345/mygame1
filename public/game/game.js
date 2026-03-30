@@ -524,6 +524,41 @@ function getPlayerSize() {
   return playerElem.offsetWidth || playerElem.getBoundingClientRect().width || 150;
 }
 
+function getPlayerCollisionTarget() {
+  return playerElem || document.querySelector("#player_field .player");
+}
+
+function getRectCenter(rect) {
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+}
+
+function getRectDistance(rectA, rectB) {
+  const centerA = getRectCenter(rectA);
+  const centerB = getRectCenter(rectB);
+  return Math.hypot(centerA.x - centerB.x, centerA.y - centerB.y);
+}
+
+function isMonsterTouchingPlayer(playerRect, monsterRect) {
+  const distance = getRectDistance(playerRect, monsterRect);
+  const playerRadius = Math.min(playerRect.width, playerRect.height) * 0.28;
+  const monsterRadius = Math.min(monsterRect.width, monsterRect.height) * 0.24;
+
+  return distance <= playerRadius + monsterRadius;
+}
+
+let playerDamageCooldownUntil = 0;
+
+function canMonsterDamagePlayer() {
+  return Date.now() >= playerDamageCooldownUntil;
+}
+
+function markMonsterDamageTaken() {
+  playerDamageCooldownUntil = Date.now() + 650;
+}
+
 function centerCamera() {
   if (!playerElem || map.style.display === "none") {
     return;
@@ -1638,7 +1673,7 @@ setTimeout(() => {
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -1668,9 +1703,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -1776,7 +1812,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -1865,7 +1901,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -2037,7 +2073,7 @@ setTimeout(() => {
 
     let fireInterval = setInterval(() => {
 
-      let player = document.querySelector("#player_field img");
+      let player = getPlayerCollisionTarget();
       if(!player){
         clearInterval(fireInterval);
         fire.remove();
@@ -2077,7 +2113,7 @@ setTimeout(() => {
           }
         }
 
-        let playerEl = document.querySelector("#player_field img");
+        let playerEl = getPlayerCollisionTarget();
         if(playerEl){
           playerEl.style.filter = "brightness(0.3)";
           setTimeout(() => {
@@ -2159,7 +2195,7 @@ setTimeout(() => {
   // ==========================
   let pickHeartInterval = setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let heartsDrop = document.querySelectorAll(".dropHeart");
@@ -2209,7 +2245,7 @@ setTimeout(() => {
       return;
     }
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2244,9 +2280,10 @@ setTimeout(() => {
   shootFireball(monsterX + 100, monsterY + 100);
 }
 
-if(monster && monster.parentNode && distance < 120 && monsterCanHit){
+if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
   monsterCanHit = false;
+      markMonsterDamageTaken();
 
   // анимация атаки
   monster.style.transform = "scale(1.3)";
@@ -2348,7 +2385,7 @@ if(monster && monster.parentNode && distance < 120 && monsterCanHit){
     if(e.button !== 0) return;
     if(!monster.parentNode) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2503,7 +2540,7 @@ setTimeout(() => {
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2533,9 +2570,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -2633,7 +2671,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2720,7 +2758,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -2822,7 +2860,7 @@ setTimeout(() => {
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2852,9 +2890,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -2952,7 +2991,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3038,7 +3077,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3143,7 +3182,7 @@ setTimeout(() => {
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3173,9 +3212,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -3273,7 +3313,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3359,7 +3399,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3463,7 +3503,7 @@ setTimeout(() => {
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3493,9 +3533,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -3593,7 +3634,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3679,7 +3720,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3784,7 +3825,7 @@ setTimeout(() => {
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3814,9 +3855,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -3914,7 +3956,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4000,7 +4042,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -4104,7 +4146,7 @@ setTimeout(() => {
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4134,9 +4176,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -4234,7 +4277,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4320,7 +4363,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -4819,7 +4862,7 @@ function createMonster() {
 
     if(gamePaused) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4847,9 +4890,10 @@ function createMonster() {
     monsterHPText.style.left = monsterX + "px";
     monsterHPText.style.top = (monsterY - 30) + "px";
 
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
 
       monsterCanHit = false;
+      markMonsterDamageTaken();
 
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
