@@ -40,8 +40,8 @@ async function onAppReady() {
   const game = new BrowserWindow({
     width: 1440,
     height: 900,
-    minWidth: 1100,
-    minHeight: 700,
+    minWidth: 900,
+    minHeight: 600,
     autoHideMenuBar: true,
     resizable: true,
     maximizable: true,
@@ -80,6 +80,15 @@ async function onAppReady() {
   game.on("closed", () => {
     if (!loadScreen.isDestroyed()) {
       loadScreen.close();
+    }
+  });
+  game.webContents.on("before-input-event", (event, input) => {
+    if (
+      input.type === "keyDown" &&
+      (input.key === "F11" || (input.key === "Enter" && input.alt))
+    ) {
+      event.preventDefault();
+      game.setFullScreen(!game.isFullScreen());
     }
   });
   game.webContents.on(

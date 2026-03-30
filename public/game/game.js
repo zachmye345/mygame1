@@ -107,20 +107,20 @@ socket.on("connect", () => {
   socket.on("some_player_disconnect", (num, players) => {
     if (my_num === num && start2 != 0) {
       start3 = 0;
-      document.removeEventListener("mousedown", mouseDown);
-      document.removeEventListener("mouseup", mouseUp);
-      document.removeEventListener("keydown", onKeydown);
-      document.removeEventListener("keyup", onKeyup);
-
-      cancelAnimationFrame(movingID);
-      cancelAnimationFrame(movingID2);
-      cancelAnimationFrame(movingID3);
-      cancelAnimationFrame(movingID4);
-
-      movingRight = false;
-      movingLeft = false;
-      movingUp = false;
-      movingBottom = false;
+      unbindGameControls();
+      stopMovement();
+      pauseOverlay.style.display = "none";
+      pauseBtn.style.display = "none";
+      gamePaused = false;
+      countdownActive = false;
+      if (countdownTimerId) {
+        clearTimeout(countdownTimerId);
+        countdownTimerId = null;
+      }
+      if (countdownElement) {
+        countdownElement.remove();
+        countdownElement = null;
+      }
       beforeMenu.style.display = "flex";
       ui.style.display = "none";
       map.style.filter = "blur(55px)";
@@ -162,6 +162,7 @@ socket.on("connect", () => {
   socket.on("spawn", (num, x, y, skin, size, players) => {
     my_num = num;
     playerElem = firstCreatePlayer(x, y, skin, size);
+    startArenaTimer();
     // clearList();
     // setTimeout(() => {
     //   list(players);
@@ -213,6 +214,13 @@ const level = document.getElementById("level");
 const zapol1 = document.getElementById("zapol1");
 const zapol2 = document.getElementById("zapol2");
 const video_bg = document.getElementById("video_bg");
+const MAP_WIDTH = 5760;
+const MAP_HEIGHT = 3250;
+const MENU_BASE_WIDTH = 1700;
+const MENU_BASE_HEIGHT = 950;
+const BEFORE_MENU_BASE_WIDTH = 876;
+const BEFORE_MENU_BASE_HEIGHT = 620;
+const ARENA_VIEWPORT_SIZE = 10000;
 let plusMoney = document.getElementById("plusMoney");
 let plusKills = document.getElementById("plusKills");
 let start3 = 0;
@@ -250,6 +258,123 @@ let start = document.querySelector(".button-menu"),
   score_list = document.querySelector(".score_list"),
   kakaxiPole = document.querySelector(".kakaxi"),
   menu_block = document.querySelector(".menu-block");
+const beforeMenuPanel = document.querySelector(".in-before-menu");
+let controlsBound = false;
+let countdownActive = false;
+let countdownTimerId = null;
+let countdownElement = null;
+
+function setArenaViewportActive(active) {
+  const viewportSize = active ? `${ARENA_VIEWPORT_SIZE}px` : "100%";
+
+  html.style.width = viewportSize;
+  html.style.height = viewportSize;
+  body.style.width = viewportSize;
+  body.style.height = viewportSize;
+}
+
+function fitPanelToViewport(panel, baseWidth, baseHeight) {
+  if (!panel) {
+    return;
+  }
+
+  const scale = Math.min(
+    window.innerWidth / baseWidth,
+    window.innerHeight / baseHeight,
+    1
+  );
+
+  panel.style.transform = `scale(${scale})`;
+  panel.style.transformOrigin = "center center";
+}
+
+function getPlayerSize() {
+  if (!playerElem) {
+    return 150;
+  }
+
+  return playerElem.offsetWidth || playerElem.getBoundingClientRect().width || 150;
+}
+
+function centerCamera() {
+  if (!playerElem || map.style.display === "none") {
+    return;
+  }
+
+  const fieldRect = player_field.getBoundingClientRect();
+  const fieldLeft = fieldRect.left + window.scrollX;
+  const fieldTop = fieldRect.top + window.scrollY;
+  const playerSize = getPlayerSize();
+  const targetLeft =
+    fieldLeft + player_x + playerSize / 2 - window.innerWidth / 2;
+  const targetTop =
+    fieldTop + player_y + playerSize / 2 - window.innerHeight / 2;
+  const maxLeft = Math.max(
+    0,
+    document.documentElement.scrollWidth - window.innerWidth
+  );
+  const maxTop = Math.max(
+    0,
+    document.documentElement.scrollHeight - window.innerHeight
+  );
+
+  window.scrollTo(
+    Math.min(Math.max(targetLeft, 0), maxLeft),
+    Math.min(Math.max(targetTop, 0), maxTop)
+  );
+}
+
+function syncViewportLayout() {
+  fitPanelToViewport(menu, MENU_BASE_WIDTH, MENU_BASE_HEIGHT);
+  fitPanelToViewport(
+    beforeMenuPanel,
+    BEFORE_MENU_BASE_WIDTH,
+    BEFORE_MENU_BASE_HEIGHT
+  );
+
+  if (playerElem && map.style.display !== "none") {
+    centerCamera();
+  }
+}
+
+function stopMovement() {
+  cancelAnimationFrame(movingID);
+  cancelAnimationFrame(movingID2);
+  cancelAnimationFrame(movingID3);
+  cancelAnimationFrame(movingID4);
+
+  movingRight = false;
+  movingLeft = false;
+  movingUp = false;
+  movingBottom = false;
+}
+
+function bindGameControls() {
+  if (controlsBound) {
+    return;
+  }
+
+  document.addEventListener("mousedown", mouseDown);
+  document.addEventListener("mouseup", mouseUp);
+  document.addEventListener("keydown", onKeydown);
+  document.addEventListener("keyup", onKeyup);
+  controlsBound = true;
+}
+
+function unbindGameControls() {
+  if (!controlsBound) {
+    return;
+  }
+
+  document.removeEventListener("mousedown", mouseDown);
+  document.removeEventListener("mouseup", mouseUp);
+  document.removeEventListener("keydown", onKeydown);
+  document.removeEventListener("keyup", onKeyup);
+  controlsBound = false;
+}
+
+window.addEventListener("resize", syncViewportLayout);
+syncViewportLayout();
 
 start.addEventListener("click", () => {
   let ae = document.querySelector(".error");
@@ -279,21 +404,17 @@ start.addEventListener("click", () => {
     ui.style.display = "block";
     map.style.display = "block";
     gif.style.display = "block";
-    html.style.width = "10000px";
-    html.style.height = "10000px";
-    body.style.width = "10000px";
-    body.style.height = "10000px";
+    pauseOverlay.style.display = "none";
+    pauseBtn.style.display = "none";
+    stopMovement();
+    unbindGameControls();
+    setArenaViewportActive(true);
+    syncViewportLayout();
     let skin = localStorage.getItem("skin");
     money_ui.textContent = localStorage.getItem("money");
     let x = randomInteger(550, 5060);
     let y = randomInteger(550, 2500);
     socket.emit("spawn", x, y, input.value, skin, 150, playerStartCount);
-    setTimeout(() => {
-      document.addEventListener("mousedown", mouseDown);
-      document.addEventListener("mouseup", mouseUp);
-      document.addEventListener("keydown", onKeydown);
-      document.addEventListener("keyup", onKeyup);
-    }, 100);
   }
 });
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,7 +468,7 @@ function firstCreatePlayer(x, y, skin, size) {
   player_field.append(div);
   player_x = x;
   player_y = y;
-  window.scrollTo(x + 1060 + 150, y + 2950);
+  centerCamera();
   const sword = document.createElement("div");
   sword.classList.add("sword");
   sword.style.top = -100 + "%";
@@ -451,20 +572,8 @@ function mouseDown(e) {
 }
 
 function hit() {
-  cancelAnimationFrame(movingID);
-  cancelAnimationFrame(movingID2);
-  cancelAnimationFrame(movingID3);
-  cancelAnimationFrame(movingID4);
-
-  movingRight = false;
-  movingLeft = false;
-  movingUp = false;
-  movingBottom = false;
-
-  document.removeEventListener("mousedown", mouseDown);
-  document.removeEventListener("mouseup", mouseUp);
-  document.removeEventListener("keydown", onKeydown);
-  document.removeEventListener("keyup", onKeyup);
+  stopMovement();
+  unbindGameControls();
   let playerElemBound = playerElem.getBoundingClientRect();
   // animationSword.style.animation = `hit 1.0s linear forwards`;
   // ! let div = null;
@@ -518,10 +627,9 @@ function hit() {
   }
   setTimeout(() => {
     mosey2 = false;
-    document.addEventListener("mousedown", mouseDown);
-    document.addEventListener("mouseup", mouseUp);
-    document.addEventListener("keydown", onKeydown);
-    document.addEventListener("keyup", onKeyup);
+    if (!countdownActive && !gamePaused && map.style.display !== "none") {
+      bindGameControls();
+    }
   }, 501);
 }
 
@@ -614,13 +722,13 @@ let side = "up";
 function moveRight() {
   let playerElemBound = playerElem.getBoundingClientRect();
   let player_x2 = player_x + playerElemBound.width;
-  if (player_x2 >= 5760) {
+  if (player_x2 >= MAP_WIDTH) {
     return null;
   } else {
     movingID = requestAnimationFrame(moveRight);
     player_x += step;
     playerElem.style.left = player_x + "px";
-    window.scrollBy(step, 0);
+    centerCamera();
     side = "right";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -634,7 +742,7 @@ function moveLeft() {
     movingID2 = requestAnimationFrame(moveLeft);
     player_x -= step;
     playerElem.style.left = player_x + "px";
-    window.scrollBy(-step, 0);
+    centerCamera();
     side = "left";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -644,13 +752,13 @@ function moveLeft() {
 function moveBottom() {
   let playerElemBound = playerElem.getBoundingClientRect();
   let player_y2 = player_y + playerElemBound.height;
-  if (player_y2 >= 3250) {
+  if (player_y2 >= MAP_HEIGHT) {
     return null;
   } else {
     movingID3 = requestAnimationFrame(moveBottom);
     player_y += step;
     playerElem.style.top = player_y + "px";
-    window.scrollBy(0, step);
+    centerCamera();
     side = "down";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -664,7 +772,7 @@ function moveUp() {
     movingID4 = requestAnimationFrame(moveUp);
     player_y -= step;
     playerElem.style.top = player_y + "px";
-    window.scrollBy(0, -step);
+    centerCamera();
     side = "up";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -677,8 +785,8 @@ function moveUp() {
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 
-canvas.width = 5760;
-canvas.height = 3250;
+canvas.width = MAP_WIDTH;
+canvas.height = MAP_HEIGHT;
 
 let grid = [];
 let globalOffset = 1000;
@@ -1010,65 +1118,65 @@ function plusExp(event) {
 function setCharacteristics(lvl) {
   if (lvl === 2) {
     step = 10;
-    window.scrollTo(player_x + 1060 + 165, player_y + 2950);
     playerElem.style.width = 162 + "px";
     playerElem.style.height = 162 + "px";
+    centerCamera();
     rangeIncrease = 1.1;
     socket.emit("setChar", 162, my_num);
   } else if (lvl === 3) {
     step = 9;
-    window.scrollTo(player_x + 1060 + 174, player_y + 2950);
     playerElem.style.width = 174 + "px";
     playerElem.style.height = 174 + "px";
+    centerCamera();
     rangeIncrease = 1.2;
     socket.emit("setChar", 174, my_num);
   } else if (lvl === 4) {
     step = 9;
-    window.scrollTo(player_x + 1060 + 186, player_y + 2950);
     playerElem.style.width = 186 + "px";
     playerElem.style.height = 186 + "px";
+    centerCamera();
     rangeIncrease = 1.3;
     socket.emit("setChar", 186, my_num);
   } else if (lvl === 5) {
     step = 8;
-    window.scrollTo(player_x + 1060 + 198, player_y + 2950);
     playerElem.style.width = 198 + "px";
     playerElem.style.height = 198 + "px";
+    centerCamera();
     rangeIncrease = 1.4;
     socket.emit("setChar", 198, my_num);
   } else if (lvl === 6) {
     step = 8;
-    window.scrollTo(player_x + 1060 + 210, player_y + 2950);
     playerElem.style.width = 210 + "px";
     playerElem.style.height = 210 + "px";
+    centerCamera();
     rangeIncrease = 1.5;
     socket.emit("setChar", 210, my_num);
   } else if (lvl === 7) {
     step = 7;
-    window.scrollTo(player_x + 1060 + 222, player_y + 2950);
     playerElem.style.width = 222 + "px";
     playerElem.style.height = 222 + "px";
+    centerCamera();
     rangeIncrease = 1.6;
     socket.emit("setChar", 222, my_num);
   } else if (lvl === 8) {
     step = 7;
-    window.scrollTo(player_x + 1060 + 234, player_y + 2950);
     playerElem.style.width = 234 + "px";
     playerElem.style.height = 234 + "px";
+    centerCamera();
     rangeIncrease = 1.7;
     socket.emit("setChar", 234, my_num);
   } else if (lvl === 9) {
     step = 6;
-    window.scrollTo(player_x + 1060 + 246, player_y + 2950);
     playerElem.style.width = 246 + "px";
     playerElem.style.height = 246 + "px";
+    centerCamera();
     rangeIncrease = 1.8;
     socket.emit("setChar", 246, my_num);
   } else if (lvl === "MAX") {
     step = 6;
-    window.scrollTo(player_x + 1060 + 258, player_y + 2950);
     playerElem.style.width = 258 + "px";
     playerElem.style.height = 258 + "px";
+    centerCamera();
     rangeIncrease = 1.9;
     socket.emit("setChar", 258, my_num);
   }
@@ -1096,6 +1204,18 @@ function setCharacteristics(lvl) {
 let beforeMenuBtn = document.querySelector(".menu-menu");
 beforeMenuBtn.addEventListener("click", () => {
   socket.emit("number");
+  unbindGameControls();
+  stopMovement();
+  gamePaused = false;
+  countdownActive = false;
+  if (countdownTimerId) {
+    clearTimeout(countdownTimerId);
+    countdownTimerId = null;
+  }
+  if (countdownElement) {
+    countdownElement.remove();
+    countdownElement = null;
+  }
   beforeMenu.style.display = "none";
   map.style.filter = "blur(0px)";
   video_bg.style.display = "block";
@@ -1103,10 +1223,11 @@ beforeMenuBtn.addEventListener("click", () => {
   ui.style.display = "none";
   map.style.display = "none";
   gif.style.display = "none";
-  html.style.width = "100%";
-  html.style.height = "100%";
-  body.style.width = "100%";
-  body.style.height = "100%";
+  pauseOverlay.style.display = "none";
+  pauseBtn.style.display = "none";
+  setArenaViewportActive(false);
+  window.scrollTo(0, 0);
+  syncViewportLayout();
   money.textContent = localStorage.getItem("money");
   kill.textContent = localStorage.getItem("kill");
   death.textContent = localStorage.getItem("death");
@@ -1183,6 +1304,10 @@ setTimeout(() => {
 
 // 👇 дальше твой код
 let startHP = playerHP;
+
+function monsterSpawnDelay(delay) {
+  return Math.max(800, Math.floor(delay * 0.8));
+}
 
 // ---------------- MONSTER ----------------
 
@@ -1517,7 +1642,7 @@ document.body.appendChild(victory);
 
   });
 
-},1000);
+}, monsterSpawnDelay(1000));
 // ---------------- MONSTER ----------------
 
 setTimeout(() => {
@@ -2034,7 +2159,7 @@ if(monster && monster.parentNode && distance < 120 && monsterCanHit){
 
   });
 
-}, 50000);
+}, monsterSpawnDelay(50000));
 
 
 
@@ -2351,7 +2476,7 @@ document.body.appendChild(victory);
 
   });
 
-},100000);
+}, monsterSpawnDelay(100000));
 
 // ---------------- MONSTER ----------------
 
@@ -2665,7 +2790,7 @@ document.body.appendChild(victory);
 
   });
 
-},150000);
+}, monsterSpawnDelay(150000));
 
 
 
@@ -2981,7 +3106,7 @@ document.body.appendChild(victory);
 
   });
 
-},250000);
+}, monsterSpawnDelay(250000));
 
 
 // ---------------- MONSTER ----------------
@@ -3296,7 +3421,7 @@ document.body.appendChild(victory);
 
   });
 
-},300000);
+}, monsterSpawnDelay(300000));
 
 
 
@@ -3612,7 +3737,7 @@ document.body.appendChild(victory);
 
   });
 
-},400000);
+}, monsterSpawnDelay(400000));
 
 
 // ---------------- MONSTER ----------------
@@ -3927,7 +4052,7 @@ document.body.appendChild(victory);
 
   });
 
-},450000);
+}, monsterSpawnDelay(450000));
 
 
 // ==========================
@@ -4014,7 +4139,7 @@ pauseBtn.style.height = "50px";
 pauseBtn.style.background = "#d9c9a3";
 pauseBtn.style.border = "3px solid #6b4f2a";
 pauseBtn.style.borderRadius = "10px";
-pauseBtn.style.display = "flex";
+pauseBtn.style.display = "none";
 pauseBtn.style.alignItems = "center";
 pauseBtn.style.justifyContent = "center";
 pauseBtn.style.fontSize = "24px";
@@ -4116,7 +4241,12 @@ pauseMenu.appendChild(exitBtn);
 // ==========================
 
 pauseBtn.onclick = function(){
+  if (countdownActive || map.style.display === "none") {
+    return;
+  }
 
+  stopMovement();
+  unbindGameControls();
   gamePaused = true;
   pauseOverlay.style.display = "flex";
 
@@ -4125,9 +4255,12 @@ pauseBtn.onclick = function(){
 
 // ▶️ ПРОДОЛЖИТЬ
 resumeBtn.onclick = function(){
-
   gamePaused = false;
   pauseOverlay.style.display = "none";
+  if (!countdownActive && map.style.display !== "none") {
+    bindGameControls();
+    centerCamera();
+  }
 
 };
 
@@ -4211,7 +4344,7 @@ if(load){
 // ==========================
 
 exitBtn.onclick = function(){
-  location.reload();
+  window.close();
 };
 
 
@@ -4244,62 +4377,75 @@ document.addEventListener("keydown", function(e){
 
 
 function startArenaTimer(){
+  stopMovement();
+  unbindGameControls();
+  countdownActive = true;
+  gamePaused = true;
+  pauseOverlay.style.display = "none";
+  pauseBtn.style.display = "none";
 
-let timer = document.createElement("div");
+  if (countdownTimerId) {
+    clearTimeout(countdownTimerId);
+    countdownTimerId = null;
+  }
 
-timer.style.position = "fixed";
-timer.style.top = "50%";
-timer.style.left = "50%";
-timer.style.transform = "translate(-50%, -50%)";
-timer.style.fontSize = "120px";
-timer.style.fontWeight = "bold";
-timer.style.color = "white";
-timer.style.zIndex = "1";
-timer.style.textShadow = "0 0 20px white";
+  if (countdownElement) {
+    countdownElement.remove();
+  }
 
-document.body.appendChild(timer);
+  countdownElement = document.createElement("div");
+  countdownElement.style.position = "fixed";
+  countdownElement.style.top = "50%";
+  countdownElement.style.left = "50%";
+  countdownElement.style.transform = "translate(-50%, -50%)";
+  countdownElement.style.fontSize = "120px";
+  countdownElement.style.fontWeight = "bold";
+  countdownElement.style.color = "white";
+  countdownElement.style.zIndex = "10001";
+  countdownElement.style.textShadow = "0 0 20px white";
 
-let time = 10;
+  document.body.appendChild(countdownElement);
 
-let interval = setInterval(()=>{
+  const countdownSteps = ["3", "2", "1", "START!"];
+  let countdownIndex = 0;
 
-timer.innerText = time;
+  const showCountdownStep = () => {
+    if (!countdownElement) {
+      return;
+    }
 
-time--;
+    const label = countdownSteps[countdownIndex];
 
-if(time < 0){
+    countdownElement.innerText = label;
 
-clearInterval(interval);
+    if (label === "START!") {
+      countdownElement.style.color = "#00ff88";
+      countdownElement.style.fontSize = "140px";
+      countdownTimerId = window.setTimeout(() => {
+        if (countdownElement) {
+          countdownElement.remove();
+          countdownElement = null;
+        }
+        countdownTimerId = null;
+        countdownActive = false;
+        gamePaused = false;
+        if (map.style.display !== "none") {
+          pauseBtn.style.display = "flex";
+          bindGameControls();
+          centerCamera();
+        }
+      }, 900);
+      return;
+    }
 
-timer.innerText = "START!";
+    countdownElement.style.color = "white";
+    countdownElement.style.fontSize = "120px";
+    countdownIndex++;
+    countdownTimerId = window.setTimeout(showCountdownStep, 1000);
+  };
 
-timer.style.color = "#00ff88";
-timer.style.fontSize = "140px";
-
-setTimeout(()=>{
-timer.remove();
-},1500);
-
+  showCountdownStep();
 }
-
-},1000);
-}
-
-
-
-let waitPlayer = setInterval(()=>{
-
-let player = document.querySelector("#player_field img");
-
-if(player){
-
-clearInterval(waitPlayer);
-
-startArenaTimer();
-
-}
-
-},500);
 
 function createMonster() {
 
