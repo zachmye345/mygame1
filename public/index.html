@@ -3,163 +3,769 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EggArena Web</title>
+    <meta
+      name="description"
+      content="EggArena - браузерная арена с прокачкой, монстрами, магазином и быстрым стартом прямо на сайте."
+    />
+    <title>EggArena</title>
     <style>
+      :root {
+        --bg: #06111f;
+        --bg-soft: rgba(7, 18, 33, 0.72);
+        --panel: rgba(12, 23, 42, 0.82);
+        --line: rgba(180, 225, 255, 0.16);
+        --text: #f4efe0;
+        --muted: rgba(244, 239, 224, 0.74);
+        --blue: #6fd0ff;
+        --cyan: #4ee8ff;
+        --gold: #ffd36f;
+        --danger: #ff7569;
+        --shadow: 0 32px 100px rgba(0, 0, 0, 0.38);
+      }
+
       * {
         box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
       }
 
       body {
         margin: 0;
         min-height: 100vh;
         font-family: "Trebuchet MS", "Segoe UI", sans-serif;
-        color: #f8ecd0;
-        background: #020814;
-        overflow: hidden;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(107, 208, 255, 0.18), transparent 28%),
+          radial-gradient(circle at 85% 15%, rgba(120, 118, 255, 0.14), transparent 22%),
+          linear-gradient(180deg, #020814 0%, #081525 55%, #03060d 100%);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .bg-video,
+      .bg-overlay,
+      .stars {
+        position: fixed;
+        inset: 0;
       }
 
       .bg-video {
-        position: fixed;
-        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.28;
-        filter: blur(4px) brightness(0.75);
+        opacity: 0.2;
+        filter: blur(4px) saturate(1.1);
         pointer-events: none;
       }
 
-      .overlay {
-        position: fixed;
-        inset: 0;
+      .bg-overlay {
         background:
-          radial-gradient(circle at 20% 20%, rgba(94, 158, 255, 0.28), transparent 30%),
-          radial-gradient(circle at 80% 25%, rgba(166, 109, 255, 0.22), transparent 28%),
-          radial-gradient(circle at 50% 80%, rgba(54, 178, 255, 0.18), transparent 32%),
-          rgba(2, 8, 20, 0.72);
+          linear-gradient(180deg, rgba(2, 8, 20, 0.15), rgba(2, 8, 20, 0.78)),
+          radial-gradient(circle at 15% 20%, rgba(111, 208, 255, 0.16), transparent 24%),
+          radial-gradient(circle at 85% 10%, rgba(255, 211, 111, 0.12), transparent 20%);
+        pointer-events: none;
       }
 
-      main {
+      .stars {
+        background-image:
+          radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.8px),
+          radial-gradient(circle at 25% 70%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.8px),
+          radial-gradient(circle at 45% 30%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.8px),
+          radial-gradient(circle at 65% 80%, rgba(255, 255, 255, 0.85) 0 1px, transparent 1.8px),
+          radial-gradient(circle at 82% 38%, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.8px),
+          radial-gradient(circle at 92% 16%, rgba(255, 255, 255, 0.65) 0 1px, transparent 1.8px);
+        opacity: 0.45;
+        pointer-events: none;
+      }
+
+      .page {
         position: relative;
         z-index: 1;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 24px;
       }
 
-      .card {
-        width: min(980px, 100%);
-        display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 24px;
-        padding: 28px;
-        border-radius: 28px;
-        border: 1px solid rgba(255, 240, 210, 0.16);
-        background: rgba(10, 18, 35, 0.78);
-        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.4);
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
         backdrop-filter: blur(18px);
+        background: rgba(4, 10, 20, 0.54);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 82px;
       }
 
       .brand {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        text-decoration: none;
       }
 
       .brand img {
-        width: min(340px, 100%);
-        height: auto;
+        width: 54px;
+        height: 54px;
+        object-fit: contain;
+        filter: drop-shadow(0 0 18px rgba(111, 208, 255, 0.4));
+      }
+
+      .brand-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand-copy strong {
+        font-size: 20px;
+        letter-spacing: 0.03em;
+      }
+
+      .brand-copy span {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .nav a {
+        padding: 10px 14px;
+        border-radius: 999px;
+        text-decoration: none;
+        color: rgba(244, 239, 224, 0.82);
+        transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+      }
+
+      .nav a:hover {
+        background: rgba(111, 208, 255, 0.12);
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      .hero {
+        padding: 44px 0 28px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .hero-copy,
+      .hero-preview,
+      .glass-card,
+      .feature-card,
+      .control-card,
+      .gallery-card,
+      .cta-block {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .hero-copy {
+        padding: 34px;
+        border-radius: 34px;
       }
 
       .eyebrow {
         display: inline-flex;
-        width: fit-content;
+        align-items: center;
+        gap: 8px;
         padding: 8px 14px;
         border-radius: 999px;
-        background: rgba(143, 183, 255, 0.14);
-        color: #b9d6ff;
-        font-size: 13px;
-        letter-spacing: 0.12em;
+        background: rgba(111, 208, 255, 0.1);
+        color: #bfe8ff;
+        letter-spacing: 0.15em;
+        font-size: 12px;
         text-transform: uppercase;
       }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(38px, 5vw, 72px);
-        line-height: 0.95;
+      .hero-copy h1 {
+        margin: 20px 0 18px;
+        font-size: clamp(48px, 7vw, 92px);
+        line-height: 0.92;
       }
 
-      p {
+      .hero-copy p {
+        max-width: 650px;
         margin: 0;
         font-size: 18px;
-        line-height: 1.55;
-        color: rgba(248, 236, 208, 0.88);
+        line-height: 1.65;
+        color: var(--muted);
       }
 
-      .panel {
+      .hero-actions {
         display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 18px;
-        padding: 22px;
-        border-radius: 22px;
-        background: rgba(248, 236, 208, 0.08);
-        border: 1px solid rgba(248, 236, 208, 0.14);
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 30px;
       }
 
-      .play-link {
+      .button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 64px;
-        padding: 16px 24px;
+        min-height: 60px;
+        padding: 14px 22px;
         border-radius: 18px;
-        background: linear-gradient(135deg, #67b8ff, #2b8cff);
-        color: #04111f;
+        border: 1px solid transparent;
         text-decoration: none;
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 800;
-        box-shadow: 0 18px 40px rgba(43, 140, 255, 0.28);
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
       }
 
-      .play-link:hover {
-        transform: translateY(-2px) scale(1.01);
-        box-shadow: 0 22px 46px rgba(43, 140, 255, 0.34);
+      .button.primary {
+        color: #031120;
+        background: linear-gradient(135deg, var(--gold), #ffb44d);
+        box-shadow: 0 20px 45px rgba(255, 180, 77, 0.26);
       }
 
-      .note {
-        font-size: 15px;
-        color: rgba(248, 236, 208, 0.72);
+      .button.secondary {
+        color: var(--text);
+        background: rgba(111, 208, 255, 0.08);
+        border-color: rgba(111, 208, 255, 0.22);
       }
 
-      .stat {
-        padding: 14px 16px;
-        border-radius: 16px;
-        background: rgba(6, 12, 24, 0.55);
-        border: 1px solid rgba(248, 236, 208, 0.08);
+      .button:hover {
+        transform: translateY(-2px);
       }
 
-      .stat strong {
+      .hero-meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 26px;
+      }
+
+      .meta-card {
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(6, 13, 24, 0.54);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .meta-card strong {
         display: block;
         margin-bottom: 6px;
-        color: #ffffff;
+        color: #fff;
+        font-size: 18px;
       }
 
-      @media (max-width: 840px) {
-        .card {
+      .meta-card span {
+        color: var(--muted);
+        line-height: 1.45;
+        font-size: 14px;
+      }
+
+      .hero-preview {
+        position: relative;
+        overflow: hidden;
+        min-height: 640px;
+        border-radius: 34px;
+        padding: 28px;
+      }
+
+      .hero-preview::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at center, rgba(78, 232, 255, 0.14), transparent 28%),
+          radial-gradient(circle at 72% 20%, rgba(255, 117, 105, 0.18), transparent 26%),
+          linear-gradient(180deg, rgba(4, 12, 25, 0.25), rgba(4, 12, 25, 0.72));
+      }
+
+      .arena-core {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 230px;
+        height: 230px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        background:
+          radial-gradient(circle at center, rgba(255, 255, 255, 0.12), rgba(58, 132, 255, 0.08) 40%, transparent 72%),
+          linear-gradient(135deg, rgba(111, 208, 255, 0.4), rgba(255, 211, 111, 0.24));
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow:
+          0 0 0 34px rgba(111, 208, 255, 0.04),
+          0 0 0 90px rgba(111, 208, 255, 0.03),
+          0 0 90px rgba(78, 232, 255, 0.2);
+      }
+
+      .arena-core::after {
+        content: "ARENA";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: 0.22em;
+        color: rgba(244, 239, 224, 0.82);
+      }
+
+      .float-card {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: 22px;
+        background: rgba(6, 13, 24, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.3);
+        animation: drift 7s ease-in-out infinite;
+      }
+
+      .float-card img {
+        width: 76px;
+        height: 76px;
+        object-fit: contain;
+      }
+
+      .float-card strong {
+        display: block;
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+
+      .float-card span {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .float-card.skin {
+        top: 42px;
+        left: 28px;
+      }
+
+      .float-card.weapon {
+        top: 86px;
+        right: 28px;
+        animation-delay: 1.1s;
+      }
+
+      .float-card.monster {
+        left: 42px;
+        bottom: 72px;
+        animation-delay: 1.9s;
+      }
+
+      .float-card.progress {
+        right: 42px;
+        bottom: 54px;
+        animation-delay: 0.6s;
+      }
+
+      .sprite {
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        object-fit: contain;
+        filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.34));
+      }
+
+      .sprite.player {
+        top: 46%;
+        left: 49%;
+        transform: translate(-50%, -50%);
+        width: 130px;
+        height: 130px;
+        animation: pulse 2.6s ease-in-out infinite;
+      }
+
+      .sprite.enemy-a {
+        top: 32%;
+        left: 22%;
+        animation: orbitA 10s linear infinite;
+      }
+
+      .sprite.enemy-b {
+        right: 20%;
+        top: 58%;
+        animation: orbitB 11s linear infinite;
+      }
+
+      section.content {
+        padding: 18px 0 26px;
+      }
+
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 18px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 54px);
+        line-height: 1;
+      }
+
+      .section-head p {
+        max-width: 520px;
+        margin: 0;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .feature-grid,
+      .gallery-grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .feature-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .feature-card {
+        padding: 24px;
+        border-radius: 24px;
+      }
+
+      .feature-card .icon {
+        display: inline-grid;
+        place-items: center;
+        width: 54px;
+        height: 54px;
+        margin-bottom: 18px;
+        border-radius: 16px;
+        background: rgba(111, 208, 255, 0.12);
+        color: var(--blue);
+        font-size: 24px;
+      }
+
+      .feature-card h3 {
+        margin: 0 0 10px;
+        font-size: 24px;
+      }
+
+      .feature-card p {
+        margin: 0;
+        line-height: 1.65;
+        color: var(--muted);
+      }
+
+      .control-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+      }
+
+      .control-card,
+      .glass-card,
+      .gallery-card,
+      .cta-block {
+        border-radius: 28px;
+      }
+
+      .control-card,
+      .glass-card {
+        padding: 26px;
+      }
+
+      .keys {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .key {
+        padding: 18px 12px;
+        border-radius: 18px;
+        text-align: center;
+        background: rgba(6, 13, 24, 0.56);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .key strong {
+        display: block;
+        font-size: 28px;
+        color: #fff;
+      }
+
+      .key span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .progress-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .progress-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .progress-step {
+        display: inline-grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 211, 111, 0.14);
+        color: var(--gold);
+        font-weight: 900;
+      }
+
+      .progress-copy strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 18px;
+      }
+
+      .progress-copy span {
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 15px;
+      }
+
+      .gallery-grid {
+        grid-template-columns: 1.05fr 0.95fr 0.95fr;
+      }
+
+      .gallery-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 260px;
+        padding: 24px;
+      }
+
+      .gallery-card img {
+        position: absolute;
+        right: 14px;
+        bottom: 14px;
+        width: 42%;
+        max-width: 180px;
+        height: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.34));
+      }
+
+      .gallery-card.wide img {
+        width: 36%;
+        right: 20px;
+      }
+
+      .gallery-card h3 {
+        max-width: 240px;
+        margin: 0 0 10px;
+        font-size: 28px;
+      }
+
+      .gallery-card p {
+        max-width: 270px;
+        margin: 0;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .gallery-card.wide {
+        background:
+          radial-gradient(circle at top left, rgba(111, 208, 255, 0.2), transparent 35%),
+          rgba(12, 23, 42, 0.86);
+      }
+
+      .gallery-card.warning {
+        background:
+          radial-gradient(circle at top right, rgba(255, 117, 105, 0.2), transparent 35%),
+          rgba(12, 23, 42, 0.86);
+      }
+
+      .cta {
+        padding: 26px 0 44px;
+      }
+
+      .cta-block {
+        padding: 30px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .cta-copy h2 {
+        margin: 0 0 10px;
+        font-size: clamp(30px, 4vw, 50px);
+      }
+
+      .cta-copy p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .footer {
+        padding: 0 0 30px;
+        color: rgba(244, 239, 224, 0.6);
+        font-size: 14px;
+      }
+
+      @keyframes drift {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      @keyframes orbitA {
+        0% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        50% {
+          transform: translate(18px, -12px) rotate(6deg);
+        }
+        100% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+      }
+
+      @keyframes orbitB {
+        0% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+        50% {
+          transform: translate(-18px, 10px) rotate(-6deg);
+        }
+        100% {
+          transform: translate(0, 0) rotate(0deg);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.05);
+        }
+      }
+
+      @media (max-width: 1040px) {
+        .hero-grid,
+        .control-grid,
+        .gallery-grid,
+        .cta-block,
+        .feature-grid {
           grid-template-columns: 1fr;
-          padding: 22px;
         }
 
-        h1 {
-          font-size: clamp(34px, 11vw, 54px);
+        .hero-preview {
+          min-height: 560px;
         }
 
-        p {
-          font-size: 16px;
+        .cta-block {
+          align-items: start;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          width: min(100% - 20px, 1180px);
+        }
+
+        .topbar-inner {
+          min-height: 74px;
+          align-items: start;
+          padding: 14px 0;
+          flex-direction: column;
+        }
+
+        .nav {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .hero-copy,
+        .hero-preview,
+        .control-card,
+        .glass-card,
+        .gallery-card,
+        .cta-block {
+          border-radius: 24px;
+        }
+
+        .hero-copy {
+          padding: 24px;
+        }
+
+        .hero-meta,
+        .keys {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .hero-preview {
+          min-height: 650px;
+          padding: 18px;
+        }
+
+        .float-card {
+          width: calc(100% - 36px);
+          left: 18px !important;
+          right: auto !important;
+        }
+
+        .float-card.skin {
+          top: 18px;
+        }
+
+        .float-card.weapon {
+          top: 138px;
+        }
+
+        .float-card.monster {
+          bottom: 138px;
+        }
+
+        .float-card.progress {
+          bottom: 18px;
+        }
+
+        .arena-core {
+          width: 180px;
+          height: 180px;
         }
       }
     </style>
@@ -168,43 +774,278 @@
     <video class="bg-video" autoplay muted playsinline loop poster="./images/fonVideo.jpg">
       <source src="./video/fonVideo.mp4" type="video/mp4" />
     </video>
-    <div class="overlay"></div>
+    <div class="bg-overlay"></div>
+    <div class="stars"></div>
 
-    <main>
-      <section class="card">
-        <div class="brand">
-          <span class="eyebrow">EggArena Web</span>
-          <img src="./images/logo.png" alt="EggArena" />
-          <h1>Браузерная версия игры</h1>
-          <p>
-            Запускайте EggArena прямо из GitHub Pages как обычный игровой сайт.
-            Прогресс сохраняется в браузере, а матч открывается по кнопке ниже.
-          </p>
+    <div class="page">
+      <header class="topbar">
+        <div class="shell topbar-inner">
+          <a class="brand" href="#top">
+            <img src="./images/logo.png" alt="EggArena" />
+            <span class="brand-copy">
+              <strong>EggArena</strong>
+              <span>Browser Arena</span>
+            </span>
+          </a>
+
+          <nav class="nav">
+            <a href="#play">Играть</a>
+            <a href="#features">Особенности</a>
+            <a href="#controls">Управление</a>
+            <a href="#progress">Прогресс</a>
+          </nav>
         </div>
+      </header>
 
-        <div class="panel">
-          <a class="play-link" href="./game/game.html?web=1">Играть в браузере</a>
-          <p class="note">
-            Веб-режим запускается как локальная браузерная версия без установки
-            приложения.
-          </p>
+      <main id="top">
+        <section class="hero">
+          <div class="shell hero-grid">
+            <div class="hero-copy">
+              <span class="eyebrow">GitHub Pages Edition</span>
+              <h1>Арена, монстры, рост и бой в браузере</h1>
+              <p>
+                EggArena теперь ощущается как полноценный игровой сайт: заходишь
+                по ссылке, запускаешь матч, появляешься прямо на карте, ждёшь
+                отсчёт и врываешься в арену без установки приложения.
+              </p>
 
-          <div class="stat">
-            <strong>Сохранения</strong>
-            Монеты, убийства и выбранные предметы хранятся в вашем браузере.
+              <div class="hero-actions" id="play">
+                <a class="button primary" href="./game/game.html?web=1">
+                  Играть в браузере
+                </a>
+                <a class="button secondary" href="#features">
+                  Посмотреть сайт
+                </a>
+              </div>
+
+              <div class="hero-meta">
+                <div class="meta-card">
+                  <strong>Локальные сохранения</strong>
+                  <span>Монеты, покупки и часть прогресса сохраняются прямо в браузере.</span>
+                </div>
+                <div class="meta-card">
+                  <strong>Быстрый старт</strong>
+                  <span>Открываешь ссылку и сразу попадаешь в игру без установщика.</span>
+                </div>
+                <div class="meta-card">
+                  <strong>Полная атмосфера</strong>
+                  <span>Космический фон, витрина арены и понятный вход в игру с сайта.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-preview">
+              <div class="arena-core"></div>
+              <img class="sprite player" src="./images/character6.png" alt="Player skin" />
+              <img class="sprite enemy-a" src="./images/monct3.png" alt="Monster" />
+              <img class="sprite enemy-b" src="./images/monct6.png" alt="Monster" />
+
+              <div class="float-card skin">
+                <img src="./images/character4.png" alt="Skin" />
+                <div>
+                  <strong>Скины</strong>
+                  <span>Выбирай внешний вид и заходи в арену со своим стилем.</span>
+                </div>
+              </div>
+
+              <div class="float-card weapon">
+                <img src="./images/sword5.png" alt="Sword" />
+                <div>
+                  <strong>Оружие</strong>
+                  <span>Покупай и переключай клинки под свой темп боя.</span>
+                </div>
+              </div>
+
+              <div class="float-card monster">
+                <img src="./images/monct1.png" alt="Monster card" />
+                <div>
+                  <strong>Монстры</strong>
+                  <span>Волны врагов спавнятся по карте и заставляют двигаться.</span>
+                </div>
+              </div>
+
+              <div class="float-card progress">
+                <img src="./images/coin.png" alt="Coin" />
+                <div>
+                  <strong>Прогресс</strong>
+                  <span>Монеты, убийства и прокачка делают каждую сессию полезной.</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="stat">
-            <strong>Управление</strong>
-            После загрузки матча игрок появляется на карте, проходит отсчёт, и
-            только затем включается движение.
+        </section>
+
+        <section class="content" id="features">
+          <div class="shell">
+            <div class="section-head">
+              <h2>Почему сайт стал лучше</h2>
+              <p>
+                Это уже не просто страница с кнопкой, а полноценный вход в игру:
+                с понятной подачей, навигацией, атмосферой и быстрым стартом в матч.
+              </p>
+            </div>
+
+            <div class="feature-grid">
+              <article class="feature-card">
+                <div class="icon">01</div>
+                <h3>Быстрый вход</h3>
+                <p>
+                  Главная кнопка ведёт сразу в браузерный режим игры, чтобы игрок
+                  не искал, куда нажимать и как запустить арену.
+                </p>
+              </article>
+
+              <article class="feature-card">
+                <div class="icon">02</div>
+                <h3>Игровая подача</h3>
+                <p>
+                  На сайте теперь есть живая витрина: персонажи, монстры, оружие,
+                  космос и акценты, которые поддерживают ощущение игры.
+                </p>
+              </article>
+
+              <article class="feature-card">
+                <div class="icon">03</div>
+                <h3>Нормальная структура</h3>
+                <p>
+                  Сайт объясняет, как играть, что сохраняется и в чём смысл
+                  прогресса, а не бросает пользователя сразу в неизвестность.
+                </p>
+              </article>
+            </div>
           </div>
-          <div class="stat">
-            <strong>Запуск с GitHub</strong>
-            После деплоя откроется обычная ссылка на сайт, как у стандартной
-            браузерной игры.
+        </section>
+
+        <section class="content" id="controls">
+          <div class="shell control-grid">
+            <article class="control-card">
+              <div class="section-head">
+                <h2>Управление</h2>
+                <p>
+                  Всё, что нужно для старта, видно прямо на сайте. Игрок
+                  появляется на карте, идёт отсчёт, и только потом включается движение.
+                </p>
+              </div>
+
+              <div class="keys">
+                <div class="key">
+                  <strong>W</strong>
+                  <span>Вверх</span>
+                </div>
+                <div class="key">
+                  <strong>A</strong>
+                  <span>Влево</span>
+                </div>
+                <div class="key">
+                  <strong>S</strong>
+                  <span>Вниз</span>
+                </div>
+                <div class="key">
+                  <strong>D</strong>
+                  <span>Вправо</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="glass-card" id="progress">
+              <div class="section-head">
+                <h2>Как идёт прогресс</h2>
+                <p>
+                  Браузерная версия сохраняет ритм оригинальной игры: бой, награды,
+                  покупки и возврат в меню без ощущения одноразовой демки.
+                </p>
+              </div>
+
+              <div class="progress-list">
+                <div class="progress-item">
+                  <div class="progress-step">1</div>
+                  <div class="progress-copy">
+                    <strong>Старт матча</strong>
+                    <span>Появляешься на карте, проходишь отсчёт и только потом начинаешь движение.</span>
+                  </div>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-step">2</div>
+                  <div class="progress-copy">
+                    <strong>Фарм и бой</strong>
+                    <span>Собираешь ресурсы, сражаешься с монстрами и накапливаешь монеты для магазина.</span>
+                  </div>
+                </div>
+                <div class="progress-item">
+                  <div class="progress-step">3</div>
+                  <div class="progress-copy">
+                    <strong>Возврат в меню</strong>
+                    <span>Можно выйти из забега, сохранить прогресс и снова стартовать уже с покупками.</span>
+                  </div>
+                </div>
+              </div>
+            </article>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+
+        <section class="content">
+          <div class="shell">
+            <div class="section-head">
+              <h2>Что ждёт на арене</h2>
+              <p>
+                Сайт теперь продаёт саму идею игры: выживание, развитие и
+                постоянный рост прямо внутри браузерной версии.
+              </p>
+            </div>
+
+            <div class="gallery-grid">
+              <article class="gallery-card wide">
+                <h3>Собирай монеты и открывай новое</h3>
+                <p>
+                  Покупай новые скины и оружие, чтобы каждая новая попытка ощущалась
+                  не как рестарт, а как шаг вперёд.
+                </p>
+                <img src="./images/coin.png" alt="Coin reward" />
+              </article>
+
+              <article class="gallery-card">
+                <h3>Меняй стиль</h3>
+                <p>
+                  В магазине можно подобрать внешний вид под себя и сохранить его
+                  на следующие матчи.
+                </p>
+                <img src="./images/character2.png" alt="Character skin" />
+              </article>
+
+              <article class="gallery-card warning">
+                <h3>Не стой на месте</h3>
+                <p>
+                  Монстры появляются по карте и быстро создают давление, поэтому
+                  арена всё время остаётся живой.
+                </p>
+                <img src="./images/monct5.png" alt="Monster attack" />
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="cta">
+          <div class="shell">
+            <div class="cta-block">
+              <div class="cta-copy">
+                <h2>Запускай игру прямо сейчас</h2>
+                <p>
+                  Сайт уже готов быть точкой входа в EggArena: можно открыть ссылку,
+                  нажать одну кнопку и сразу зайти в матч в браузере.
+                </p>
+              </div>
+
+              <a class="button primary" href="./game/game.html?web=1">
+                Открыть арену
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="shell">EggArena Web. Браузерная версия для запуска с GitHub Pages.</div>
+      </footer>
+    </div>
   </body>
 </html>
