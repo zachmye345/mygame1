@@ -10,17 +10,19 @@
     <title>EggArena</title>
     <style>
       :root {
-        --bg: #06111f;
-        --bg-soft: rgba(7, 18, 33, 0.72);
-        --panel: rgba(12, 23, 42, 0.82);
-        --line: rgba(180, 225, 255, 0.16);
-        --text: #f4efe0;
-        --muted: rgba(244, 239, 224, 0.74);
-        --blue: #6fd0ff;
-        --cyan: #4ee8ff;
-        --gold: #ffd36f;
-        --danger: #ff7569;
-        --shadow: 0 32px 100px rgba(0, 0, 0, 0.38);
+        --bg: #040915;
+        --bg-soft: rgba(8, 16, 32, 0.68);
+        --panel: rgba(10, 20, 40, 0.84);
+        --panel-strong: rgba(9, 17, 33, 0.94);
+        --line: rgba(152, 208, 255, 0.14);
+        --text: #f7f0df;
+        --muted: rgba(247, 240, 223, 0.7);
+        --blue: #7fdaff;
+        --cyan: #49e9ff;
+        --gold: #ffd570;
+        --gold-strong: #ffbc47;
+        --red: #ff7b72;
+        --shadow: 0 34px 90px rgba(0, 0, 0, 0.36);
       }
 
       * {
@@ -34,14 +36,24 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        font-family: "Trebuchet MS", "Gill Sans", sans-serif;
         color: var(--text);
         background:
-          radial-gradient(circle at top left, rgba(107, 208, 255, 0.18), transparent 28%),
-          radial-gradient(circle at 85% 15%, rgba(120, 118, 255, 0.14), transparent 22%),
-          linear-gradient(180deg, #020814 0%, #081525 55%, #03060d 100%);
+          radial-gradient(circle at top left, rgba(104, 207, 255, 0.16), transparent 26%),
+          radial-gradient(circle at 86% 10%, rgba(255, 179, 71, 0.11), transparent 18%),
+          linear-gradient(180deg, #020612 0%, #081224 52%, #03060d 100%);
       }
 
+      body.reduced-motion *,
+      body.reduced-motion *::before,
+      body.reduced-motion *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      button,
       a {
         color: inherit;
       }
@@ -57,27 +69,27 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.2;
-        filter: blur(4px) saturate(1.1);
+        opacity: 0.16;
+        filter: blur(3px) saturate(1.1);
         pointer-events: none;
       }
 
       .bg-overlay {
         background:
-          linear-gradient(180deg, rgba(2, 8, 20, 0.15), rgba(2, 8, 20, 0.78)),
-          radial-gradient(circle at 15% 20%, rgba(111, 208, 255, 0.16), transparent 24%),
-          radial-gradient(circle at 85% 10%, rgba(255, 211, 111, 0.12), transparent 20%);
+          linear-gradient(180deg, rgba(3, 7, 16, 0.18), rgba(3, 7, 16, 0.82)),
+          radial-gradient(circle at 18% 22%, rgba(73, 233, 255, 0.14), transparent 26%),
+          radial-gradient(circle at 82% 14%, rgba(255, 213, 112, 0.09), transparent 18%);
         pointer-events: none;
       }
 
       .stars {
         background-image:
-          radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.8px),
-          radial-gradient(circle at 25% 70%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.8px),
-          radial-gradient(circle at 45% 30%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.8px),
-          radial-gradient(circle at 65% 80%, rgba(255, 255, 255, 0.85) 0 1px, transparent 1.8px),
-          radial-gradient(circle at 82% 38%, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.8px),
-          radial-gradient(circle at 92% 16%, rgba(255, 255, 255, 0.65) 0 1px, transparent 1.8px);
+          radial-gradient(circle at 12% 24%, rgba(255, 255, 255, 0.86) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 24% 72%, rgba(255, 255, 255, 0.72) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 42% 14%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 64% 82%, rgba(255, 255, 255, 0.78) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 84% 36%, rgba(255, 255, 255, 0.82) 0 1px, transparent 1.6px),
+          radial-gradient(circle at 94% 17%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px);
         opacity: 0.45;
         pointer-events: none;
       }
@@ -88,25 +100,25 @@
       }
 
       .shell {
-        width: min(1180px, calc(100% - 32px));
+        width: min(1220px, calc(100% - 32px));
         margin: 0 auto;
       }
 
       .topbar {
         position: sticky;
         top: 0;
-        z-index: 10;
-        backdrop-filter: blur(18px);
-        background: rgba(4, 10, 20, 0.54);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        z-index: 12;
+        background: rgba(4, 10, 20, 0.56);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
       }
 
       .topbar-inner {
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
         gap: 18px;
-        min-height: 82px;
+        min-height: 80px;
       }
 
       .brand {
@@ -117,10 +129,10 @@
       }
 
       .brand img {
-        width: 54px;
-        height: 54px;
+        width: 52px;
+        height: 52px;
         object-fit: contain;
-        filter: drop-shadow(0 0 18px rgba(111, 208, 255, 0.4));
+        filter: drop-shadow(0 0 18px rgba(127, 218, 255, 0.42));
       }
 
       .brand-copy {
@@ -135,8 +147,8 @@
       }
 
       .brand-copy span {
-        font-size: 12px;
-        letter-spacing: 0.18em;
+        font-size: 11px;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
         color: var(--muted);
       }
@@ -152,34 +164,34 @@
         padding: 10px 14px;
         border-radius: 999px;
         text-decoration: none;
-        color: rgba(244, 239, 224, 0.82);
-        transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+        color: rgba(247, 240, 223, 0.84);
+        transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
       }
 
       .nav a:hover {
-        background: rgba(111, 208, 255, 0.12);
+        background: rgba(127, 218, 255, 0.12);
         color: #fff;
         transform: translateY(-1px);
       }
 
       .hero {
-        padding: 44px 0 28px;
+        padding: 42px 0 28px;
       }
 
       .hero-grid {
         display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 28px;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 24px;
         align-items: stretch;
       }
 
+      .glass,
       .hero-copy,
-      .hero-preview,
-      .glass-card,
+      .arena-shell,
       .feature-card,
       .control-card,
       .gallery-card,
-      .cta-block {
+      .cta-card {
         border: 1px solid var(--line);
         background: var(--panel);
         box-shadow: var(--shadow);
@@ -187,42 +199,45 @@
       }
 
       .hero-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
         padding: 34px;
-        border-radius: 34px;
+        border-radius: 32px;
       }
 
       .eyebrow {
         display: inline-flex;
         align-items: center;
+        width: fit-content;
         gap: 8px;
         padding: 8px 14px;
         border-radius: 999px;
-        background: rgba(111, 208, 255, 0.1);
-        color: #bfe8ff;
-        letter-spacing: 0.15em;
+        background: rgba(127, 218, 255, 0.1);
+        color: #c6ebff;
         font-size: 12px;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
       }
 
       .hero-copy h1 {
-        margin: 20px 0 18px;
-        font-size: clamp(48px, 7vw, 92px);
-        line-height: 0.92;
+        margin: 0;
+        font-size: clamp(48px, 7vw, 86px);
+        line-height: 0.9;
       }
 
       .hero-copy p {
-        max-width: 650px;
         margin: 0;
+        max-width: 550px;
+        color: var(--muted);
         font-size: 18px;
         line-height: 1.65;
-        color: var(--muted);
       }
 
       .hero-actions {
         display: flex;
         flex-wrap: wrap;
         gap: 14px;
-        margin-top: 30px;
       }
 
       .button {
@@ -231,226 +246,476 @@
         justify-content: center;
         min-height: 60px;
         padding: 14px 22px;
-        border-radius: 18px;
         border: 1px solid transparent;
+        border-radius: 18px;
         text-decoration: none;
         font-size: 18px;
         font-weight: 800;
+        cursor: pointer;
         transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-      }
-
-      .button.primary {
-        color: #031120;
-        background: linear-gradient(135deg, var(--gold), #ffb44d);
-        box-shadow: 0 20px 45px rgba(255, 180, 77, 0.26);
-      }
-
-      .button.secondary {
-        color: var(--text);
-        background: rgba(111, 208, 255, 0.08);
-        border-color: rgba(111, 208, 255, 0.22);
       }
 
       .button:hover {
         transform: translateY(-2px);
       }
 
-      .hero-meta {
+      .button.primary {
+        color: #04111f;
+        background: linear-gradient(135deg, var(--gold), var(--gold-strong));
+        box-shadow: 0 18px 42px rgba(255, 188, 71, 0.26);
+      }
+
+      .button.secondary {
+        background: rgba(127, 218, 255, 0.08);
+        border-color: rgba(127, 218, 255, 0.22);
+      }
+
+      .button.ghost {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+
+      .hero-badges {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
-        margin-top: 26px;
       }
 
-      .meta-card {
-        padding: 16px;
+      .hero-badge {
+        padding: 18px;
         border-radius: 18px;
-        background: rgba(6, 13, 24, 0.54);
+        background: rgba(6, 13, 25, 0.58);
         border: 1px solid rgba(255, 255, 255, 0.06);
       }
 
-      .meta-card strong {
+      .hero-badge strong {
         display: block;
         margin-bottom: 6px;
-        color: #fff;
         font-size: 18px;
       }
 
-      .meta-card span {
+      .hero-badge span {
         color: var(--muted);
-        line-height: 1.45;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .mini-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .mini-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: rgba(247, 240, 223, 0.8);
         font-size: 14px;
       }
 
-      .hero-preview {
+      .mini-stat strong {
+        color: var(--gold);
+        font-size: 16px;
+      }
+
+      .arena-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding: 22px;
+        border-radius: 32px;
+      }
+
+      .arena-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .toolbar-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .toolbar-chip,
+      .toolbar-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 14px;
+      }
+
+      .toolbar-chip {
+        background: rgba(127, 218, 255, 0.08);
+        border: 1px solid rgba(127, 218, 255, 0.18);
+        color: #cbf0ff;
+      }
+
+      .toolbar-button {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      }
+
+      .toolbar-button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(127, 218, 255, 0.26);
+        background: rgba(127, 218, 255, 0.08);
+      }
+
+      .arena-stage {
         position: relative;
         overflow: hidden;
-        min-height: 640px;
-        border-radius: 34px;
-        padding: 28px;
+        min-height: 520px;
+        border-radius: 28px;
+        background:
+          radial-gradient(circle at 18% 18%, rgba(73, 233, 255, 0.08), transparent 30%),
+          radial-gradient(circle at 82% 14%, rgba(255, 123, 114, 0.12), transparent 24%),
+          linear-gradient(180deg, rgba(7, 14, 28, 0.88), rgba(5, 10, 20, 0.96));
+        border: 1px solid rgba(255, 255, 255, 0.05);
       }
 
-      .hero-preview::before {
-        content: "";
+      .scene-surface {
         position: absolute;
         inset: 0;
-        background:
-          radial-gradient(circle at center, rgba(78, 232, 255, 0.14), transparent 28%),
-          radial-gradient(circle at 72% 20%, rgba(255, 117, 105, 0.18), transparent 26%),
-          linear-gradient(180deg, rgba(4, 12, 25, 0.25), rgba(4, 12, 25, 0.72));
       }
 
-      .arena-core {
+      .scene-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(127, 218, 255, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(127, 218, 255, 0.06) 1px, transparent 1px);
+        background-size: 48px 48px;
+        opacity: 0.24;
+        mask-image: radial-gradient(circle at center, black 52%, transparent 100%);
+      }
+
+      .scene-root {
+        --scene-scale: 1;
+        --tilt-x: 0deg;
+        --tilt-y: 0deg;
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 230px;
-        height: 230px;
+        width: 660px;
+        height: 660px;
+        transform:
+          translate(-50%, -50%)
+          perspective(1600px)
+          rotateX(var(--tilt-x))
+          rotateY(var(--tilt-y))
+          scale(var(--scene-scale));
+        transform-style: preserve-3d;
+        transition: transform 0.22s ease;
+      }
+
+      .scene-ring,
+      .scene-ring::before,
+      .scene-ring::after {
+        position: absolute;
+        inset: 50%;
         border-radius: 50%;
         transform: translate(-50%, -50%);
+      }
+
+      .scene-ring {
+        width: 280px;
+        height: 280px;
         background:
-          radial-gradient(circle at center, rgba(255, 255, 255, 0.12), rgba(58, 132, 255, 0.08) 40%, transparent 72%),
-          linear-gradient(135deg, rgba(111, 208, 255, 0.4), rgba(255, 211, 111, 0.24));
+          radial-gradient(circle at center, rgba(255, 255, 255, 0.16), rgba(65, 132, 255, 0.08) 54%, transparent 74%);
         border: 1px solid rgba(255, 255, 255, 0.18);
         box-shadow:
-          0 0 0 34px rgba(111, 208, 255, 0.04),
-          0 0 0 90px rgba(111, 208, 255, 0.03),
-          0 0 90px rgba(78, 232, 255, 0.2);
+          0 0 0 42px rgba(127, 218, 255, 0.05),
+          0 0 0 104px rgba(127, 218, 255, 0.03),
+          0 0 80px rgba(73, 233, 255, 0.18);
       }
 
-      .arena-core::after {
+      .scene-ring::before {
+        content: "";
+        width: 360px;
+        height: 360px;
+        border: 1px dashed rgba(127, 218, 255, 0.18);
+        animation: spinSlow 20s linear infinite;
+      }
+
+      .scene-ring::after {
         content: "ARENA";
-        position: absolute;
-        inset: 0;
         display: grid;
         place-items: center;
-        font-size: 34px;
+        width: 280px;
+        height: 280px;
+        font-size: 42px;
         font-weight: 900;
-        letter-spacing: 0.22em;
-        color: rgba(244, 239, 224, 0.82);
+        letter-spacing: 0.18em;
+        color: rgba(247, 240, 223, 0.78);
       }
 
-      .float-card {
+      .scene-orbit {
+        position: absolute;
+        inset: 50%;
+        width: 420px;
+        height: 420px;
+        transform: translate(-50%, -50%);
+        animation: spinSlow 18s linear infinite;
+      }
+
+      .scene-orbit.fast {
+        width: 320px;
+        height: 320px;
+        animation-duration: 12s;
+        animation-direction: reverse;
+      }
+
+      .orbit-item {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.34));
+      }
+
+      .scene-orbit .orbit-item:first-child {
+        top: -12px;
+        left: 148px;
+      }
+
+      .scene-orbit .orbit-item:last-child {
+        left: 302px;
+        top: 258px;
+      }
+
+      .scene-orbit.fast .orbit-item:first-child {
+        top: 38px;
+        left: 222px;
+        width: 86px;
+        height: 86px;
+      }
+
+      .scene-orbit.fast .orbit-item:last-child {
+        top: 226px;
+        left: 22px;
+        width: 86px;
+        height: 86px;
+      }
+
+      .player-core {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 180px;
+        height: 180px;
+        transform: translate(-50%, -50%);
+      }
+
+      .player-shadow {
+        position: absolute;
+        inset: auto 24px 10px 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.34);
+        filter: blur(10px);
+      }
+
+      .player-avatar {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        animation: playerPulse 2.7s ease-in-out infinite;
+        filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.4));
+      }
+
+      .weapon-swing {
+        position: absolute;
+        top: 26px;
+        left: 84px;
+        width: 172px;
+        height: 172px;
+        transform-origin: 22% 76%;
+        animation: swordSlash 2.7s cubic-bezier(0.25, 0.9, 0.32, 1) infinite;
+        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.34));
+      }
+
+      .slash-arc {
+        position: absolute;
+        top: 6px;
+        left: 68px;
+        width: 220px;
+        height: 220px;
+        border-top: 4px solid rgba(255, 213, 112, 0.88);
+        border-right: 4px solid rgba(255, 213, 112, 0.28);
+        border-radius: 50%;
+        transform: rotate(-46deg);
+        opacity: 0;
+        filter: drop-shadow(0 0 12px rgba(255, 213, 112, 0.45));
+        animation: slashArc 2.7s ease-out infinite;
+      }
+
+      .slash-arc.secondary {
+        width: 190px;
+        height: 190px;
+        top: 24px;
+        left: 82px;
+        border-top-color: rgba(127, 218, 255, 0.82);
+        border-right-color: rgba(127, 218, 255, 0.24);
+        animation-delay: 0.2s;
+      }
+
+      .scene-coin {
+        position: absolute;
+        width: 86px;
+        height: 86px;
+        object-fit: contain;
+        filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.34));
+        animation: coinBob 2.3s ease-in-out infinite;
+      }
+
+      .scene-coin.a {
+        left: 120px;
+        top: 420px;
+      }
+
+      .scene-coin.b {
+        right: 128px;
+        top: 148px;
+        animation-delay: 0.8s;
+      }
+
+      .callout {
         position: absolute;
         display: flex;
         align-items: center;
-        gap: 14px;
-        padding: 14px 16px;
-        border-radius: 22px;
-        background: rgba(6, 13, 24, 0.82);
+        gap: 12px;
+        width: 220px;
+        padding: 12px 14px;
+        border-radius: 20px;
+        background: rgba(7, 14, 28, 0.86);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.3);
-        animation: drift 7s ease-in-out infinite;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
       }
 
-      .float-card img {
-        width: 76px;
-        height: 76px;
+      .callout img {
+        width: 48px;
+        height: 48px;
         object-fit: contain;
+        flex: 0 0 auto;
       }
 
-      .float-card strong {
+      .callout strong {
         display: block;
-        font-size: 18px;
         margin-bottom: 4px;
+        font-size: 16px;
       }
 
-      .float-card span {
+      .callout span {
         color: var(--muted);
-        font-size: 14px;
+        font-size: 13px;
         line-height: 1.45;
       }
 
-      .float-card.skin {
-        top: 42px;
-        left: 28px;
+      .callout.skin {
+        top: 38px;
+        left: 16px;
       }
 
-      .float-card.weapon {
-        top: 86px;
-        right: 28px;
-        animation-delay: 1.1s;
+      .callout.weapon {
+        top: 44px;
+        right: 18px;
       }
 
-      .float-card.monster {
-        left: 42px;
-        bottom: 72px;
-        animation-delay: 1.9s;
+      .callout.monsters {
+        bottom: 40px;
+        left: 26px;
       }
 
-      .float-card.progress {
-        right: 42px;
-        bottom: 54px;
-        animation-delay: 0.6s;
+      .callout.progress {
+        bottom: 42px;
+        right: 18px;
       }
 
-      .sprite {
-        position: absolute;
-        width: 110px;
-        height: 110px;
-        object-fit: contain;
-        filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.34));
+      .preview-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
       }
 
-      .sprite.player {
-        top: 46%;
-        left: 49%;
-        transform: translate(-50%, -50%);
-        width: 130px;
-        height: 130px;
-        animation: pulse 2.6s ease-in-out infinite;
+      .preview-card {
+        padding: 16px 16px 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
       }
 
-      .sprite.enemy-a {
-        top: 32%;
-        left: 22%;
-        animation: orbitA 10s linear infinite;
+      .preview-card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 18px;
       }
 
-      .sprite.enemy-b {
-        right: 20%;
-        top: 58%;
-        animation: orbitB 11s linear infinite;
+      .preview-card span {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
       }
 
       section.content {
-        padding: 18px 0 26px;
+        padding: 20px 0 26px;
       }
 
       .section-head {
         display: flex;
         justify-content: space-between;
-        gap: 20px;
         align-items: end;
+        gap: 20px;
         margin-bottom: 18px;
       }
 
       .section-head h2 {
         margin: 0;
-        font-size: clamp(30px, 4vw, 54px);
+        font-size: clamp(30px, 4vw, 52px);
         line-height: 1;
       }
 
       .section-head p {
-        max-width: 520px;
+        max-width: 540px;
         margin: 0;
-        line-height: 1.6;
         color: var(--muted);
+        line-height: 1.6;
       }
 
       .feature-grid,
-      .gallery-grid {
+      .showcase-grid {
         display: grid;
         gap: 18px;
       }
 
       .feature-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .feature-card {
         padding: 24px;
-        border-radius: 24px;
+        border-radius: 26px;
       }
 
       .feature-card .icon {
@@ -458,40 +723,54 @@
         place-items: center;
         width: 54px;
         height: 54px;
-        margin-bottom: 18px;
-        border-radius: 16px;
-        background: rgba(111, 208, 255, 0.12);
+        margin-bottom: 16px;
+        border-radius: 18px;
+        background: rgba(127, 218, 255, 0.1);
         color: var(--blue);
-        font-size: 24px;
+        font-size: 20px;
+        font-weight: 900;
       }
 
       .feature-card h3 {
         margin: 0 0 10px;
-        font-size: 24px;
+        font-size: 22px;
       }
 
       .feature-card p {
         margin: 0;
-        line-height: 1.65;
         color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .browser-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .browser-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(247, 240, 223, 0.86);
+        font-size: 14px;
       }
 
       .control-grid {
         display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
+        grid-template-columns: 1.05fr 0.95fr;
         gap: 18px;
       }
 
-      .control-card,
-      .glass-card,
-      .gallery-card,
-      .cta-block {
-        border-radius: 28px;
-      }
-
-      .control-card,
-      .glass-card {
-        padding: 26px;
+      .control-card {
+        padding: 28px;
+        border-radius: 30px;
       }
 
       .keys {
@@ -503,16 +782,15 @@
 
       .key {
         padding: 18px 12px;
-        border-radius: 18px;
         text-align: center;
-        background: rgba(6, 13, 24, 0.56);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .key strong {
         display: block;
         font-size: 28px;
-        color: #fff;
       }
 
       .key span {
@@ -541,7 +819,7 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: rgba(255, 211, 111, 0.14);
+        background: rgba(255, 213, 112, 0.14);
         color: var(--gold);
         font-weight: 900;
       }
@@ -554,162 +832,211 @@
 
       .progress-copy span {
         color: var(--muted);
-        line-height: 1.55;
         font-size: 15px;
+        line-height: 1.55;
       }
 
-      .gallery-grid {
-        grid-template-columns: 1.05fr 0.95fr 0.95fr;
+      .showcase-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
       .gallery-card {
         position: relative;
         overflow: hidden;
-        min-height: 260px;
+        min-height: 300px;
         padding: 24px;
+        border-radius: 28px;
+      }
+
+      .gallery-card h3 {
+        max-width: 230px;
+        margin: 0 0 10px;
+        font-size: 30px;
+        line-height: 1;
+      }
+
+      .gallery-card p {
+        max-width: 250px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
       }
 
       .gallery-card img {
         position: absolute;
-        right: 14px;
-        bottom: 14px;
-        width: 42%;
-        max-width: 180px;
+        right: 16px;
+        bottom: 18px;
+        width: 44%;
+        max-width: 170px;
         height: auto;
         object-fit: contain;
-        filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.34));
+        filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.34));
       }
 
-      .gallery-card.wide img {
-        width: 36%;
-        right: 20px;
-      }
-
-      .gallery-card h3 {
-        max-width: 240px;
-        margin: 0 0 10px;
-        font-size: 28px;
-      }
-
-      .gallery-card p {
-        max-width: 270px;
-        margin: 0;
-        line-height: 1.6;
-        color: var(--muted);
-      }
-
-      .gallery-card.wide {
+      .gallery-card.coins {
         background:
-          radial-gradient(circle at top left, rgba(111, 208, 255, 0.2), transparent 35%),
-          rgba(12, 23, 42, 0.86);
+          radial-gradient(circle at top left, rgba(255, 213, 112, 0.18), transparent 30%),
+          rgba(10, 20, 40, 0.84);
       }
 
-      .gallery-card.warning {
+      .gallery-card.style {
         background:
-          radial-gradient(circle at top right, rgba(255, 117, 105, 0.2), transparent 35%),
-          rgba(12, 23, 42, 0.86);
+          radial-gradient(circle at top right, rgba(127, 218, 255, 0.18), transparent 30%),
+          rgba(10, 20, 40, 0.84);
+      }
+
+      .gallery-card.monsters {
+        background:
+          radial-gradient(circle at top right, rgba(255, 123, 114, 0.16), transparent 34%),
+          rgba(10, 20, 40, 0.84);
       }
 
       .cta {
         padding: 26px 0 44px;
       }
 
-      .cta-block {
-        padding: 30px;
+      .cta-card {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 18px;
         align-items: center;
+        padding: 30px;
+        border-radius: 30px;
       }
 
-      .cta-copy h2 {
+      .cta-card h2 {
         margin: 0 0 10px;
-        font-size: clamp(30px, 4vw, 50px);
+        font-size: clamp(32px, 5vw, 56px);
+        line-height: 0.98;
       }
 
-      .cta-copy p {
+      .cta-card p {
         margin: 0;
         color: var(--muted);
         line-height: 1.65;
       }
 
+      .toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 50;
+        min-width: 240px;
+        max-width: min(380px, calc(100vw - 40px));
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(9, 17, 33, 0.96);
+        border: 1px solid rgba(127, 218, 255, 0.16);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
+        color: #fff;
+        opacity: 0;
+        transform: translateY(20px);
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .toast.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
       .footer {
         padding: 0 0 30px;
-        color: rgba(244, 239, 224, 0.6);
+        color: rgba(247, 240, 223, 0.58);
         font-size: 14px;
       }
 
-      @keyframes drift {
+      @keyframes spinSlow {
+        from {
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+          transform: translate(-50%, -50%) rotate(360deg);
+        }
+      }
+
+      @keyframes playerPulse {
         0%,
         100% {
-          transform: translateY(0px);
+          transform: scale(1);
         }
         50% {
-          transform: translateY(-10px);
+          transform: scale(1.06);
         }
       }
 
-      @keyframes orbitA {
-        0% {
-          transform: translate(0, 0) rotate(0deg);
+      @keyframes swordSlash {
+        0%,
+        18% {
+          transform: rotate(-28deg) translate(8px, -10px);
         }
-        50% {
-          transform: translate(18px, -12px) rotate(6deg);
+        28% {
+          transform: rotate(66deg) translate(16px, -54px);
         }
+        36% {
+          transform: rotate(16deg) translate(6px, -12px);
+        }
+        48%,
         100% {
-          transform: translate(0, 0) rotate(0deg);
+          transform: rotate(-28deg) translate(8px, -10px);
         }
       }
 
-      @keyframes orbitB {
-        0% {
-          transform: translate(0, 0) rotate(0deg);
+      @keyframes slashArc {
+        0%,
+        16% {
+          opacity: 0;
+          transform: rotate(-56deg) scale(0.86);
         }
-        50% {
-          transform: translate(-18px, 10px) rotate(-6deg);
+        24%,
+        34% {
+          opacity: 1;
+          transform: rotate(-8deg) scale(1.06);
         }
+        46%,
         100% {
-          transform: translate(0, 0) rotate(0deg);
+          opacity: 0;
+          transform: rotate(14deg) scale(1.12);
         }
       }
 
-      @keyframes pulse {
+      @keyframes coinBob {
         0%,
         100% {
-          transform: translate(-50%, -50%) scale(1);
+          transform: translateY(0px) rotate(0deg);
         }
         50% {
-          transform: translate(-50%, -50%) scale(1.05);
+          transform: translateY(-10px) rotate(8deg);
         }
       }
 
-      @media (max-width: 1040px) {
+      @media (max-width: 1120px) {
         .hero-grid,
         .control-grid,
-        .gallery-grid,
-        .cta-block,
-        .feature-grid {
+        .feature-grid,
+        .showcase-grid,
+        .cta-card {
           grid-template-columns: 1fr;
         }
 
-        .hero-preview {
+        .arena-stage {
           min-height: 560px;
         }
 
-        .cta-block {
+        .cta-card {
           align-items: start;
         }
       }
 
       @media (max-width: 760px) {
         .shell {
-          width: min(100% - 20px, 1180px);
+          width: min(100% - 20px, 1220px);
         }
 
         .topbar-inner {
           min-height: 74px;
-          align-items: start;
           padding: 14px 0;
+          align-items: start;
           flex-direction: column;
         }
 
@@ -719,53 +1046,110 @@
         }
 
         .hero-copy,
-        .hero-preview,
+        .arena-shell,
+        .feature-card,
         .control-card,
-        .glass-card,
         .gallery-card,
-        .cta-block {
+        .cta-card {
           border-radius: 24px;
         }
 
-        .hero-copy {
+        .hero-copy,
+        .control-card,
+        .cta-card {
           padding: 24px;
         }
 
-        .hero-meta,
+        .hero-badges,
+        .preview-strip,
         .keys {
           grid-template-columns: 1fr 1fr;
         }
 
-        .hero-preview {
-          min-height: 650px;
-          padding: 18px;
+        .arena-shell {
+          padding: 16px;
         }
 
-        .float-card {
-          width: calc(100% - 36px);
-          left: 18px !important;
-          right: auto !important;
+        .arena-stage {
+          min-height: 500px;
         }
 
-        .float-card.skin {
-          top: 18px;
+        .toolbar-group {
+          width: 100%;
         }
 
-        .float-card.weapon {
-          top: 138px;
+        .toolbar-button,
+        .toolbar-chip {
+          flex: 1 1 0;
+          justify-content: center;
         }
 
-        .float-card.monster {
-          bottom: 138px;
+        .callout {
+          width: 182px;
+          padding: 10px 12px;
         }
 
-        .float-card.progress {
-          bottom: 18px;
+        .callout span {
+          font-size: 12px;
         }
 
-        .arena-core {
-          width: 180px;
-          height: 180px;
+        .callout.skin {
+          top: 14px;
+          left: 10px;
+        }
+
+        .callout.weapon {
+          top: 14px;
+          right: 10px;
+        }
+
+        .callout.monsters {
+          bottom: 14px;
+          left: 10px;
+        }
+
+        .callout.progress {
+          bottom: 14px;
+          right: 10px;
+        }
+
+        .scene-root {
+          width: 560px;
+          height: 560px;
+        }
+      }
+
+      @media (max-width: 540px) {
+        .hero-copy h1,
+        .cta-card h2 {
+          line-height: 0.94;
+        }
+
+        .hero-badges,
+        .preview-strip,
+        .keys {
+          grid-template-columns: 1fr;
+        }
+
+        .arena-stage {
+          min-height: 560px;
+        }
+
+        .callout {
+          width: 168px;
+        }
+
+        .callout strong {
+          font-size: 14px;
+        }
+
+        .callout span {
+          display: none;
+        }
+
+        .scene-root {
+          width: 520px;
+          height: 520px;
         }
       }
     </style>
@@ -790,9 +1174,9 @@
 
           <nav class="nav">
             <a href="#play">Играть</a>
-            <a href="#features">Особенности</a>
+            <a href="#features">Фишки</a>
+            <a href="#browser">Браузер</a>
             <a href="#controls">Управление</a>
-            <a href="#progress">Прогресс</a>
           </nav>
         </div>
       </header>
@@ -804,9 +1188,9 @@
               <span class="eyebrow">GitHub Pages Edition</span>
               <h1>Арена, монстры, рост и бой в браузере</h1>
               <p>
-                EggArena теперь ощущается как полноценный игровой сайт: заходишь
-                по ссылке, запускаешь матч, появляешься прямо на карте, ждёшь
-                отсчёт и врываешься в арену без установки приложения.
+                Теперь сайт ощущается как игровая витрина, а не просто как
+                переходная страница. Здесь уже есть живая сцена, анимация меча,
+                масштабирование под экран и браузерные фичи для быстрого старта.
               </p>
 
               <div class="hero-actions" id="play">
@@ -814,61 +1198,128 @@
                   Играть в браузере
                 </a>
                 <a class="button secondary" href="#features">
-                  Посмотреть сайт
+                  Смотреть фишки
                 </a>
               </div>
 
-              <div class="hero-meta">
-                <div class="meta-card">
-                  <strong>Локальные сохранения</strong>
-                  <span>Монеты, покупки и часть прогресса сохраняются прямо в браузере.</span>
+              <div class="mini-stats">
+                <div class="mini-stat"><strong>WASD</strong> движение</div>
+                <div class="mini-stat"><strong>Web</strong> без установки</div>
+                <div class="mini-stat"><strong>Save</strong> локальный прогресс</div>
+              </div>
+
+              <div class="hero-badges">
+                <div class="hero-badge">
+                  <strong>Адаптивная сцена</strong>
+                  <span>Главная витрина теперь не разваливается и аккуратно скейлится под размер окна.</span>
                 </div>
-                <div class="meta-card">
-                  <strong>Быстрый старт</strong>
-                  <span>Открываешь ссылку и сразу попадаешь в игру без установщика.</span>
+                <div class="hero-badge">
+                  <strong>Живой бой</strong>
+                  <span>У героя есть заметная анимация удара мечом, а монстры и награды двигаются по сцене.</span>
                 </div>
-                <div class="meta-card">
-                  <strong>Полная атмосфера</strong>
-                  <span>Космический фон, витрина арены и понятный вход в игру с сайта.</span>
+                <div class="hero-badge">
+                  <strong>Браузерные кнопки</strong>
+                  <span>Есть быстрые действия прямо на сайте: fullscreen, motion toggle и копирование ссылки.</span>
                 </div>
               </div>
             </div>
 
-            <div class="hero-preview">
-              <div class="arena-core"></div>
-              <img class="sprite player" src="./images/character6.png" alt="Player skin" />
-              <img class="sprite enemy-a" src="./images/monct3.png" alt="Monster" />
-              <img class="sprite enemy-b" src="./images/monct6.png" alt="Monster" />
+            <div class="arena-shell">
+              <div class="arena-toolbar">
+                <div class="toolbar-group">
+                  <span class="toolbar-chip">Сайт живой</span>
+                  <span class="toolbar-chip">Анимированный меч</span>
+                  <span class="toolbar-chip">Адаптивный масштаб</span>
+                </div>
 
-              <div class="float-card skin">
-                <img src="./images/character4.png" alt="Skin" />
-                <div>
-                  <strong>Скины</strong>
-                  <span>Выбирай внешний вид и заходи в арену со своим стилем.</span>
+                <div class="toolbar-group">
+                  <button class="toolbar-button" id="fullscreenButton" type="button">
+                    Полный экран
+                  </button>
+                  <button class="toolbar-button" id="motionButton" type="button">
+                    Motion: On
+                  </button>
+                  <button class="toolbar-button" id="copyButton" type="button">
+                    Копировать ссылку
+                  </button>
                 </div>
               </div>
 
-              <div class="float-card weapon">
-                <img src="./images/sword5.png" alt="Sword" />
-                <div>
-                  <strong>Оружие</strong>
-                  <span>Покупай и переключай клинки под свой темп боя.</span>
+              <div class="arena-stage" id="arenaStage">
+                <div class="scene-surface">
+                  <div class="scene-grid"></div>
+                </div>
+
+                <div class="scene-root" id="sceneRoot">
+                  <div class="scene-ring"></div>
+
+                  <div class="scene-orbit">
+                    <img class="orbit-item" src="./images/monct3.png" alt="Monster" />
+                    <img class="orbit-item" src="./images/monct5.png" alt="Monster" />
+                  </div>
+
+                  <div class="scene-orbit fast">
+                    <img class="orbit-item" src="./images/coin.png" alt="Coin" />
+                    <img class="orbit-item" src="./images/coin.png" alt="Coin" />
+                  </div>
+
+                  <div class="player-core">
+                    <div class="player-shadow"></div>
+                    <img class="player-avatar" src="./images/character6.png" alt="Player" />
+                    <img class="weapon-swing" src="./images/sword5.png" alt="Weapon swing" />
+                    <div class="slash-arc"></div>
+                    <div class="slash-arc secondary"></div>
+                  </div>
+
+                  <img class="scene-coin a" src="./images/coin.png" alt="Coin reward" />
+                  <img class="scene-coin b" src="./images/coin.png" alt="Coin reward" />
+
+                  <div class="callout skin">
+                    <img src="./images/character4.png" alt="Skin" />
+                    <div>
+                      <strong>Скины</strong>
+                      <span>Герой выглядит живее и аккуратнее в собранной сцене.</span>
+                    </div>
+                  </div>
+
+                  <div class="callout weapon">
+                    <img src="./images/sword4.png" alt="Weapon" />
+                    <div>
+                      <strong>Оружие</strong>
+                      <span>Меч больше не лежит мёртво, а даёт ощущение настоящего удара.</span>
+                    </div>
+                  </div>
+
+                  <div class="callout monsters">
+                    <img src="./images/monct1.png" alt="Monster" />
+                    <div>
+                      <strong>Монстры</strong>
+                      <span>Враги не просто висят, а двигаются по орбитам и держат давление.</span>
+                    </div>
+                  </div>
+
+                  <div class="callout progress">
+                    <img src="./images/coin.png" alt="Progress" />
+                    <div>
+                      <strong>Прогресс</strong>
+                      <span>Награды и развитие теперь читаются даже на главной странице сайта.</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="float-card monster">
-                <img src="./images/monct1.png" alt="Monster card" />
-                <div>
-                  <strong>Монстры</strong>
-                  <span>Волны врагов спавнятся по карте и заставляют двигаться.</span>
+              <div class="preview-strip">
+                <div class="preview-card">
+                  <strong>Fullscreen</strong>
+                  <span>Можно развернуть страницу целиком и сразу запускать браузерный режим с красивой витриной.</span>
                 </div>
-              </div>
-
-              <div class="float-card progress">
-                <img src="./images/coin.png" alt="Coin" />
-                <div>
-                  <strong>Прогресс</strong>
-                  <span>Монеты, убийства и прокачка делают каждую сессию полезной.</span>
+                <div class="preview-card">
+                  <strong>Motion Toggle</strong>
+                  <span>Если анимации много, их можно убрать одной кнопкой без перезагрузки страницы.</span>
+                </div>
+                <div class="preview-card">
+                  <strong>Share Ready</strong>
+                  <span>Сайт уже можно открыть, скопировать ссылку и сразу отправить как обычную web-игру.</span>
                 </div>
               </div>
             </div>
@@ -878,40 +1329,57 @@
         <section class="content" id="features">
           <div class="shell">
             <div class="section-head">
-              <h2>Почему сайт стал лучше</h2>
+              <h2>Что стало лучше</h2>
               <p>
-                Это уже не просто страница с кнопкой, а полноценный вход в игру:
-                с понятной подачей, навигацией, атмосферой и быстрым стартом в матч.
+                Я специально перестроил страницу так, чтобы правая часть не
+                расползалась, анимировалась и нормально выглядела на разных размерах экрана.
               </p>
             </div>
 
             <div class="feature-grid">
               <article class="feature-card">
                 <div class="icon">01</div>
-                <h3>Быстрый вход</h3>
+                <h3>Собранная композиция</h3>
                 <p>
-                  Главная кнопка ведёт сразу в браузерный режим игры, чтобы игрок
-                  не искал, куда нажимать и как запустить арену.
+                  Карточки больше не наезжают друг на друга. Теперь всё собрано
+                  вокруг одной арены и читается как единая сцена.
                 </p>
               </article>
 
               <article class="feature-card">
                 <div class="icon">02</div>
-                <h3>Игровая подача</h3>
+                <h3>Анимация оружия</h3>
                 <p>
-                  На сайте теперь есть живая витрина: персонажи, монстры, оружие,
-                  космос и акценты, которые поддерживают ощущение игры.
+                  На главной витрине меч двигается по дуге, а вместе с ним идёт
+                  световой след, чтобы экран выглядел живым.
                 </p>
               </article>
 
               <article class="feature-card">
                 <div class="icon">03</div>
-                <h3>Нормальная структура</h3>
+                <h3>Адаптивный скейл</h3>
                 <p>
-                  Сайт объясняет, как играть, что сохраняется и в чём смысл
-                  прогресса, а не бросает пользователя сразу в неизвестность.
+                  Вся сцена теперь автоматически подстраивается под размеры
+                  контейнера, а не ломается от смены масштаба окна.
                 </p>
               </article>
+
+              <article class="feature-card" id="browser">
+                <div class="icon">04</div>
+                <h3>Фишки браузера</h3>
+                <p>
+                  Fullscreen, копирование ссылки, переключение motion и лёгкий
+                  parallax на движении мыши делают сайт ощущаемо живее.
+                </p>
+              </article>
+            </div>
+
+            <div class="browser-actions">
+              <span class="browser-chip">Анимация сцены</span>
+              <span class="browser-chip">Parallax от курсора</span>
+              <span class="browser-chip">Fullscreen по кнопке</span>
+              <span class="browser-chip">Motion toggle</span>
+              <span class="browser-chip">Кнопка share</span>
             </div>
           </div>
         </section>
@@ -922,8 +1390,8 @@
               <div class="section-head">
                 <h2>Управление</h2>
                 <p>
-                  Всё, что нужно для старта, видно прямо на сайте. Игрок
-                  появляется на карте, идёт отсчёт, и только потом включается движение.
+                  Игрок появляется на карте, проходит отсчёт и только потом
+                  получает управление. Сайт теперь это тоже хорошо объясняет.
                 </p>
               </div>
 
@@ -947,12 +1415,12 @@
               </div>
             </article>
 
-            <article class="glass-card" id="progress">
+            <article class="control-card">
               <div class="section-head">
                 <h2>Как идёт прогресс</h2>
                 <p>
-                  Браузерная версия сохраняет ритм оригинальной игры: бой, награды,
-                  покупки и возврат в меню без ощущения одноразовой демки.
+                  Браузерная версия всё ещё держит логику игры: старт, бой,
+                  награды, выход в меню и новый заход уже с накопленным прогрессом.
                 </p>
               </div>
 
@@ -961,21 +1429,21 @@
                   <div class="progress-step">1</div>
                   <div class="progress-copy">
                     <strong>Старт матча</strong>
-                    <span>Появляешься на карте, проходишь отсчёт и только потом начинаешь движение.</span>
+                    <span>Сначала спавн на карте, потом отсчёт и только после этого движение.</span>
                   </div>
                 </div>
                 <div class="progress-item">
                   <div class="progress-step">2</div>
                   <div class="progress-copy">
                     <strong>Фарм и бой</strong>
-                    <span>Собираешь ресурсы, сражаешься с монстрами и накапливаешь монеты для магазина.</span>
+                    <span>Собираешь награды, двигаешься по арене и держишь темп против монстров.</span>
                   </div>
                 </div>
                 <div class="progress-item">
                   <div class="progress-step">3</div>
                   <div class="progress-copy">
                     <strong>Возврат в меню</strong>
-                    <span>Можно выйти из забега, сохранить прогресс и снова стартовать уже с покупками.</span>
+                    <span>Прогресс сохраняется, и новая попытка ощущается продолжением, а не пустым рестартом.</span>
                   </div>
                 </div>
               </div>
@@ -988,37 +1456,37 @@
             <div class="section-head">
               <h2>Что ждёт на арене</h2>
               <p>
-                Сайт теперь продаёт саму идею игры: выживание, развитие и
-                постоянный рост прямо внутри браузерной версии.
+                Ниже я оставил блоки про награды, стиль и монстров, но сделал их
+                чище и собраннее, чтобы они не выглядели как случайные картинки.
               </p>
             </div>
 
-            <div class="gallery-grid">
-              <article class="gallery-card wide">
+            <div class="showcase-grid">
+              <article class="gallery-card coins">
                 <h3>Собирай монеты и открывай новое</h3>
                 <p>
-                  Покупай новые скины и оружие, чтобы каждая новая попытка ощущалась
-                  не как рестарт, а как шаг вперёд.
+                  Покупай новые скины и оружие, чтобы каждая следующая игра
+                  ощущалась шагом вперёд, а не просто новой попыткой.
                 </p>
                 <img src="./images/coin.png" alt="Coin reward" />
               </article>
 
-              <article class="gallery-card">
+              <article class="gallery-card style">
                 <h3>Меняй стиль</h3>
                 <p>
-                  В магазине можно подобрать внешний вид под себя и сохранить его
-                  на следующие матчи.
+                  В магазине можно подобрать внешний вид героя и сохранить его
+                  под следующие матчи.
                 </p>
                 <img src="./images/character2.png" alt="Character skin" />
               </article>
 
-              <article class="gallery-card warning">
+              <article class="gallery-card monsters">
                 <h3>Не стой на месте</h3>
                 <p>
-                  Монстры появляются по карте и быстро создают давление, поэтому
-                  арена всё время остаётся живой.
+                  Монстры появляются по карте и держат давление, поэтому арена
+                  всё время остаётся живой.
                 </p>
-                <img src="./images/monct5.png" alt="Monster attack" />
+                <img src="./images/monct6.png" alt="Monster attack" />
               </article>
             </div>
           </div>
@@ -1026,12 +1494,12 @@
 
         <section class="cta">
           <div class="shell">
-            <div class="cta-block">
-              <div class="cta-copy">
+            <div class="cta-card">
+              <div>
                 <h2>Запускай игру прямо сейчас</h2>
                 <p>
-                  Сайт уже готов быть точкой входа в EggArena: можно открыть ссылку,
-                  нажать одну кнопку и сразу зайти в матч в браузере.
+                  Теперь это уже не просто GitHub-страница, а нормальный игровой
+                  сайт: есть витрина, анимация, браузерные кнопки и быстрый вход в арену.
                 </p>
               </div>
 
@@ -1047,5 +1515,89 @@
         <div class="shell">EggArena Web. Браузерная версия для запуска с GitHub Pages.</div>
       </footer>
     </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const stage = document.getElementById("arenaStage");
+      const sceneRoot = document.getElementById("sceneRoot");
+      const fullscreenButton = document.getElementById("fullscreenButton");
+      const motionButton = document.getElementById("motionButton");
+      const copyButton = document.getElementById("copyButton");
+      const toast = document.getElementById("toast");
+      let toastTimer = null;
+
+      function syncSceneScale() {
+        if (!stage || !sceneRoot) {
+          return;
+        }
+
+        const stageWidth = stage.clientWidth;
+        const stageHeight = stage.clientHeight;
+        const scale = Math.min(stageWidth / 660, stageHeight / 660);
+        sceneRoot.style.setProperty("--scene-scale", Math.max(scale, 0.45).toFixed(3));
+      }
+
+      function showToast(message) {
+        if (!toast) {
+          return;
+        }
+
+        toast.textContent = message;
+        toast.classList.add("visible");
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => {
+          toast.classList.remove("visible");
+        }, 2200);
+      }
+
+      if (stage && sceneRoot) {
+        stage.addEventListener("mousemove", (event) => {
+          const rect = stage.getBoundingClientRect();
+          const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+          const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+          sceneRoot.style.setProperty("--tilt-y", `${offsetX * 8}deg`);
+          sceneRoot.style.setProperty("--tilt-x", `${offsetY * -6}deg`);
+        });
+
+        stage.addEventListener("mouseleave", () => {
+          sceneRoot.style.setProperty("--tilt-y", "0deg");
+          sceneRoot.style.setProperty("--tilt-x", "0deg");
+        });
+      }
+
+      fullscreenButton?.addEventListener("click", async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+            showToast("Сайт открыт в полном экране");
+          } else {
+            await document.exitFullscreen();
+            showToast("Полный экран выключен");
+          }
+        } catch (error) {
+          showToast("Браузер не дал включить fullscreen");
+        }
+      });
+
+      motionButton?.addEventListener("click", () => {
+        document.body.classList.toggle("reduced-motion");
+        const reduced = document.body.classList.contains("reduced-motion");
+        motionButton.textContent = reduced ? "Motion: Off" : "Motion: On";
+        showToast(reduced ? "Анимации уменьшены" : "Анимации снова включены");
+      });
+
+      copyButton?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          showToast("Ссылка скопирована");
+        } catch (error) {
+          showToast("Не удалось скопировать ссылку");
+        }
+      });
+
+      window.addEventListener("resize", syncSceneScale);
+      syncSceneScale();
+    </script>
   </body>
 </html>
