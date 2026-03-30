@@ -775,7 +775,7 @@
 
       .keys {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
         margin-top: 22px;
       }
@@ -1174,7 +1174,6 @@
 
           <nav class="nav">
             <a href="#play">Играть</a>
-            <a href="#features">Фишки</a>
             <a href="#browser">Браузер</a>
             <a href="#controls">Управление</a>
           </nav>
@@ -1187,40 +1186,20 @@
             <div class="hero-copy">
               <span class="eyebrow">GitHub Pages Edition</span>
               <h1>Арена, монстры, рост и бой в браузере</h1>
-              <p>
-                Теперь сайт ощущается как игровая витрина, а не просто как
-                переходная страница. Здесь уже есть живая сцена, анимация меча,
-                масштабирование под экран и браузерные фичи для быстрого старта.
-              </p>
 
               <div class="hero-actions" id="play">
                 <a class="button primary" href="./game/game.html?web=1">
                   Играть в браузере
                 </a>
-                <a class="button secondary" href="#features">
-                  Смотреть фишки
+                <a class="button secondary" href="#controls">
+                  Управление
                 </a>
               </div>
 
               <div class="mini-stats">
                 <div class="mini-stat"><strong>WASD</strong> движение</div>
-                <div class="mini-stat"><strong>Web</strong> без установки</div>
-                <div class="mini-stat"><strong>Save</strong> локальный прогресс</div>
-              </div>
-
-              <div class="hero-badges">
-                <div class="hero-badge">
-                  <strong>Адаптивная сцена</strong>
-                  <span>Главная витрина теперь не разваливается и аккуратно скейлится под размер окна.</span>
-                </div>
-                <div class="hero-badge">
-                  <strong>Живой бой</strong>
-                  <span>У героя есть заметная анимация удара мечом, а монстры и награды двигаются по сцене.</span>
-                </div>
-                <div class="hero-badge">
-                  <strong>Браузерные кнопки</strong>
-                  <span>Есть быстрые действия прямо на сайте: fullscreen, motion toggle и копирование ссылки.</span>
-                </div>
+                <div class="mini-stat"><strong>ПКМ</strong> удар</div>
+                <div class="mini-stat"><strong>ЛКМ</strong> ускорение</div>
               </div>
             </div>
 
@@ -1326,73 +1305,12 @@
           </div>
         </section>
 
-        <section class="content" id="features">
-          <div class="shell">
-            <div class="section-head">
-              <h2>Что стало лучше</h2>
-              <p>
-                Я специально перестроил страницу так, чтобы правая часть не
-                расползалась, анимировалась и нормально выглядела на разных размерах экрана.
-              </p>
-            </div>
-
-            <div class="feature-grid">
-              <article class="feature-card">
-                <div class="icon">01</div>
-                <h3>Собранная композиция</h3>
-                <p>
-                  Карточки больше не наезжают друг на друга. Теперь всё собрано
-                  вокруг одной арены и читается как единая сцена.
-                </p>
-              </article>
-
-              <article class="feature-card">
-                <div class="icon">02</div>
-                <h3>Анимация оружия</h3>
-                <p>
-                  На главной витрине меч двигается по дуге, а вместе с ним идёт
-                  световой след, чтобы экран выглядел живым.
-                </p>
-              </article>
-
-              <article class="feature-card">
-                <div class="icon">03</div>
-                <h3>Адаптивный скейл</h3>
-                <p>
-                  Вся сцена теперь автоматически подстраивается под размеры
-                  контейнера, а не ломается от смены масштаба окна.
-                </p>
-              </article>
-
-              <article class="feature-card" id="browser">
-                <div class="icon">04</div>
-                <h3>Фишки браузера</h3>
-                <p>
-                  Fullscreen, копирование ссылки, переключение motion и лёгкий
-                  parallax на движении мыши делают сайт ощущаемо живее.
-                </p>
-              </article>
-            </div>
-
-            <div class="browser-actions">
-              <span class="browser-chip">Анимация сцены</span>
-              <span class="browser-chip">Parallax от курсора</span>
-              <span class="browser-chip">Fullscreen по кнопке</span>
-              <span class="browser-chip">Motion toggle</span>
-              <span class="browser-chip">Кнопка share</span>
-            </div>
-          </div>
-        </section>
-
         <section class="content" id="controls">
           <div class="shell control-grid">
             <article class="control-card">
               <div class="section-head">
                 <h2>Управление</h2>
-                <p>
-                  Игрок появляется на карте, проходит отсчёт и только потом
-                  получает управление. Сайт теперь это тоже хорошо объясняет.
-                </p>
+                <p>Только нужные кнопки.</p>
               </div>
 
               <div class="keys">
@@ -1412,40 +1330,31 @@
                   <strong>D</strong>
                   <span>Вправо</span>
                 </div>
+                <div class="key">
+                  <strong>ПКМ</strong>
+                  <span>Ударить врага</span>
+                </div>
+                <div class="key">
+                  <strong>ЛКМ</strong>
+                  <span>Зажать для ускорения</span>
+                </div>
               </div>
             </article>
 
-            <article class="control-card">
+            <article class="control-card" id="browser">
               <div class="section-head">
-                <h2>Как идёт прогресс</h2>
+                <h2>Браузер</h2>
                 <p>
-                  Браузерная версия всё ещё держит логику игры: старт, бой,
-                  награды, выход в меню и новый заход уже с накопленным прогрессом.
+                  Полезные кнопки прямо на сайте.
                 </p>
               </div>
 
-              <div class="progress-list">
-                <div class="progress-item">
-                  <div class="progress-step">1</div>
-                  <div class="progress-copy">
-                    <strong>Старт матча</strong>
-                    <span>Сначала спавн на карте, потом отсчёт и только после этого движение.</span>
-                  </div>
-                </div>
-                <div class="progress-item">
-                  <div class="progress-step">2</div>
-                  <div class="progress-copy">
-                    <strong>Фарм и бой</strong>
-                    <span>Собираешь награды, двигаешься по арене и держишь темп против монстров.</span>
-                  </div>
-                </div>
-                <div class="progress-item">
-                  <div class="progress-step">3</div>
-                  <div class="progress-copy">
-                    <strong>Возврат в меню</strong>
-                    <span>Прогресс сохраняется, и новая попытка ощущается продолжением, а не пустым рестартом.</span>
-                  </div>
-                </div>
+              <div class="browser-actions">
+                <span class="browser-chip">Fullscreen</span>
+                <span class="browser-chip">Motion On/Off</span>
+                <span class="browser-chip">Копировать ссылку</span>
+                <span class="browser-chip">Parallax сцены</span>
+                <span class="browser-chip">Анимированный удар</span>
               </div>
             </article>
           </div>
@@ -1455,18 +1364,14 @@
           <div class="shell">
             <div class="section-head">
               <h2>Что ждёт на арене</h2>
-              <p>
-                Ниже я оставил блоки про награды, стиль и монстров, но сделал их
-                чище и собраннее, чтобы они не выглядели как случайные картинки.
-              </p>
+              <p>Коротко по сути.</p>
             </div>
 
             <div class="showcase-grid">
               <article class="gallery-card coins">
                 <h3>Собирай монеты и открывай новое</h3>
                 <p>
-                  Покупай новые скины и оружие, чтобы каждая следующая игра
-                  ощущалась шагом вперёд, а не просто новой попыткой.
+                  Покупай новые скины и оружие.
                 </p>
                 <img src="./images/coin.png" alt="Coin reward" />
               </article>
@@ -1474,8 +1379,7 @@
               <article class="gallery-card style">
                 <h3>Меняй стиль</h3>
                 <p>
-                  В магазине можно подобрать внешний вид героя и сохранить его
-                  под следующие матчи.
+                  Выбирай внешний вид героя под свой стиль.
                 </p>
                 <img src="./images/character2.png" alt="Character skin" />
               </article>
@@ -1483,29 +1387,10 @@
               <article class="gallery-card monsters">
                 <h3>Не стой на месте</h3>
                 <p>
-                  Монстры появляются по карте и держат давление, поэтому арена
-                  всё время остаётся живой.
+                  Монстры давят и заставляют двигаться.
                 </p>
                 <img src="./images/monct6.png" alt="Monster attack" />
               </article>
-            </div>
-          </div>
-        </section>
-
-        <section class="cta">
-          <div class="shell">
-            <div class="cta-card">
-              <div>
-                <h2>Запускай игру прямо сейчас</h2>
-                <p>
-                  Теперь это уже не просто GitHub-страница, а нормальный игровой
-                  сайт: есть витрина, анимация, браузерные кнопки и быстрый вход в арену.
-                </p>
-              </div>
-
-              <a class="button primary" href="./game/game.html?web=1">
-                Открыть арену
-              </a>
             </div>
           </div>
         </section>
