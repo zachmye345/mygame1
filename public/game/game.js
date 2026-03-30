@@ -200,6 +200,19 @@ socket.on("connect", () => {
 });
 
 socket.connect();
+const player_field = document.getElementById("player_field");
+const beforeMenu = document.getElementById("beforeMenu");
+const moneyBefore = document.getElementById("moneyBefore");
+const killBefore = document.getElementById("killBefore");
+const deathBefore = document.getElementById("deathBefore");
+const money_ui = document.getElementById("money_ui");
+const money = document.getElementById("money");
+const kill = document.getElementById("kill");
+const death = document.getElementById("death");
+const level = document.getElementById("level");
+const zapol1 = document.getElementById("zapol1");
+const zapol2 = document.getElementById("zapol2");
+const video_bg = document.getElementById("video_bg");
 let plusMoney = document.getElementById("plusMoney");
 let plusKills = document.getElementById("plusKills");
 let start3 = 0;

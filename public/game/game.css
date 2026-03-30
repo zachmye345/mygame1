@@ -9,9 +9,13 @@
   position: absolute;
   width: 10000px;
   height: 10000px;
-  background-image: url(http://designe-r.in.ua/wp-content/uploads/_/podborka-besplatnykh-fonov-zvyozdnogo-neba/76588.jpg);
-  filter: blur(25px);
-  box-shadow: black 0px 0px 10px 10px;
+  background-image: url("../images/fonVideo.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(18px);
+  opacity: 0.35;
+  pointer-events: none;
 }
 .player {
   position: absolute;
