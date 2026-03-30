@@ -1,0 +1,1 @@
+electron-packager . EggArena.io --platform=win32 --asar --icon=public/image/logo.ico

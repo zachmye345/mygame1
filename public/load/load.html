@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body,
+      html {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: black;
+      }
+      #canva {
+        background-color: black;
+      }
+      img {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="../images/logo.png" id="img" />
+    <canvas height="500px" width="500px" id="canva"></canvas>
+  </body>
+  <script>
+    let canva = document.getElementById("canva"),
+      ctx = canva.getContext("2d");
+    let img = document.getElementById("img");
+    // canva.addEventListener("click", (e) => {
+    //   console.log(e.x, e.y);
+    // });
+    let xArr = [];
+    let yArr = [];
+    function creating() {
+      for (let i = 0; i <= 1000; i++) {
+        xArr.push({
+          x: i,
+        });
+        yArr.push({
+          y: i,
+        });
+      }
+      console.log(xArr);
+    }
+    creating();
+    ctx.strokeStyle = "white";
+    ctx.moveTo(xArr[0].x, yArr[0].y);
+    let i = 1;
+    let count = 0;
+    inter = setInterval(function () {
+      if (count == 0) {
+        let pointX = xArr[i];
+        let pointY = yArr[i];
+        i++;
+        ctx.lineTo(pointX.x, pointY.y);
+        ctx.stroke();
+        count++;
+      } else if (count == 1) {
+        let pointX = xArr[i];
+        let pointY = yArr[i];
+        i++;
+        ctx.lineTo(pointX.x * -1, pointY.y);
+        ctx.stroke();
+        count++;
+      } else if (count == 2) {
+        let pointX = xArr[i];
+        let pointY = yArr[i];
+        i++;
+        ctx.lineTo(pointX.x, pointY.y * -1);
+        ctx.stroke();
+        count++;
+      } else if (count == 3) {
+        let pointX = xArr[i];
+        let pointY = yArr[i];
+        i++;
+        ctx.lineTo(pointX.x * -1, pointY.y * -1);
+        ctx.stroke();
+        count++;
+      } else if (count == 4) {
+        let pointX = xArr[i];
+        let pointY = yArr[i];
+        i++;
+        ctx.lineTo(0, pointY.y);
+        ctx.stroke();
+        count++;
+      } else if (count == 5) {
+        let pointX = xArr[i];
+        let pointY = yArr[i];
+        i++;
+        ctx.lineTo(pointX.x, 0);
+        ctx.stroke();
+        count = 0;
+      }
+      if (i == 1000) {
+        clearInterval(inter);
+        ctx.clearRect(0, 0, canva.width, canva.height);
+        ctx.drawImage(img, 0, 0, 500, 500);
+        ctx.font = "4em Roboto";
+        ctx.fillStyle = "White";
+        ctx.textAlign = "center";
+        ctx.strokeText("EggArena", canva.width / 2, 450);
+        ctx.fillText("EggArena", canva.width / 2, 450);
+      }
+    }, 0);
+    ctx.stroke();
+  </script>
+</html>

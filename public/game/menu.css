@@ -1,0 +1,713 @@
+* {
+  padding: 0;
+  margin: 0;
+  cursor: default;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  user-select: none;
+}
+
+body,
+html {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/*---------------------- Мейн ----------------------*/
+.main-block {
+  display: flex;
+  width: 1700px;
+  height: 950px;
+  z-index: 2;
+}
+
+/* ---------------------- В мейне ----------------------*/
+.store-block {
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  width: 25%;
+  height: 100%;
+  border: #4b291f 4px solid;
+  outline: #6b382a 4px solid;
+  overflow-y: auto;
+}
+
+.menu-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  width: 50%;
+  height: 100%;
+}
+
+.info-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 25%;
+  height: 100%;
+}
+
+/*---------------------- В магазине ----------------------*/
+.text-block {
+  border-bottom: #4b291f 4px solid;
+  height: 9.9%;
+  width: 100%;
+  background-color: #f2dbb5;
+  text-align: center;
+  line-height: 100px;
+  font-weight: bold;
+  color: #321b15;
+  font-size: 2.2em;
+}
+
+.store-header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: normal;
+}
+
+.store-arrow {
+  position: relative;
+  z-index: 11;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: #321b15;
+}
+
+.store-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
+  height: 90%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.imgBlocks {
+  height: 260px;
+  width: 100%;
+  border: #4b291f 4px solid;
+  outline: #6b382a 4px solid;
+  background-color: #f2dbb5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.button-store {
+  text-align: center;
+  line-height: 35px;
+  font-size: 1.1em;
+  height: 38px;
+  width: 75%;
+  color: white;
+  background-color: rgba(102, 148, 178, 1);
+  border: ridge rgba(126, 170, 196, 1) 4px;
+  border-radius: 15px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.1s;
+}
+
+.button-store:active {
+  transform: scale(0.8);
+  background-color: rgb(178, 102, 102);
+  border: ridge rgb(196, 126, 126) 4px;
+}
+
+.images {
+  width: 100%;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.images > img {
+  position: static;
+  transform: none;
+  max-width: 160px;
+  max-height: 160px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.coin {
+  position: static;
+  transform: none;
+  width: 26px;
+  height: 26px;
+}
+
+.store-text {
+  font-weight: bold;
+  color: #321b15;
+  font-size: 2em;
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+/*---------------------- В меню ----------------------*/
+.input-menu {
+  margin-top: -150px;
+  background-color: rgb(53, 25, 10);
+  color: ivory;
+  font-size: 2.2em;
+  font-weight: bold;
+  border: rgb(112, 73, 27) 10px solid;
+  padding-left: 15px;
+  padding-right: 15px;
+  cursor: text;
+  z-index: 2;
+  border-radius: 10px;
+}
+
+.table {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(53, 25, 10);
+  width: 190px;
+  height: 90px;
+  border: 7px solid rgb(112, 73, 27);
+  border-radius: 10px;
+}
+
+.button-menu {
+  cursor: pointer;
+  border-radius: 10px;
+  margin-top: -10px;
+  padding-left: 45px;
+  padding-right: 45px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background: linear-gradient(
+    38deg,
+    rgba(126, 170, 196, 1) 0%,
+    rgba(102, 148, 178, 1) 50%,
+    rgba(126, 170, 196, 1) 100%
+  );
+  color: ivory;
+  font-size: 2em;
+  font-weight: bold;
+  padding-left: 15px;padding-right: 15px;
+  box-shadow: 0px 10px 25px 1px black;
+  transition: 0.15s;
+}
+
+.button-menu:active {
+  background: linear-gradient(
+    38deg,
+    rgb(196, 126, 126) 0%,
+    rgb(178, 102, 102) 50%,
+    rgb(196, 126, 126) 100%
+  );
+  transform: scale(0.8);
+}
+
+.exit-menu {
+  cursor: pointer;
+  border-radius: 10px;
+  margin-top: -10px;
+  padding-left: 45px;
+  padding-right: 45px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background: linear-gradient(
+    38deg,
+    rgb(196, 126, 126) 0%,
+    rgb(178, 102, 102) 50%,
+    rgb(196, 126, 126) 100%
+  );
+  color: ivory;
+  font-size: 2em;
+  font-weight: bold;
+  padding-left: 15px;
+  padding-right: 15px;
+  box-shadow: 0px 10px 25px 1px black;
+  transition: 0.15s;
+}
+
+.exit-menu:active {
+  background: linear-gradient(
+    38deg,
+    rgba(126, 170, 196, 1) 0%,
+    rgba(102, 148, 178, 1) 50%,
+    rgba(126, 170, 196, 1) 100%
+  );
+  transform: scale(0.8);
+}
+
+.slider {
+  width: 100%;
+  height: 20%;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.arrow-right {
+  margin-top: 55px;
+  margin-left: -45px;
+  width: 10px;
+  height: 10px;
+  border: solid rgba(126, 170, 196, 1);
+  border-width: 0 15px 15px 0;
+  padding: 25px;
+  transform: rotate(-45deg);
+  border-radius: 15px;
+  transition: 0.15s;
+  animation: arrow2 1s infinite linear;
+}
+
+.arrow-left {
+  margin-right: -45px;
+  margin-top: 55px;
+  transform: rotate(135deg);
+  width: 10px;
+  height: 10px;
+  border: solid rgba(126, 170, 196, 1);
+  border-width: 0 15px 15px 0;
+  padding: 25px;
+  border-radius: 15px;
+  transition: 0.15s;
+  animation: arrow1 1s infinite linear;
+}
+
+.player-choose {
+  width: 35%;
+  height: 100%;
+  position: relative;
+}
+
+.arrow-right:active {
+  transform: scale(0.8) rotate(-45deg);
+  border: solid rgb(196, 126, 126);
+  border-width: 0 15px 15px 0;
+}
+
+.arrow-left:active {
+  transform: scale(0.8) rotate(135deg);
+  border: solid rgb(196, 126, 126);
+  border-width: 0 15px 15px 0;
+}
+
+@keyframes arrow1 {
+  0% {
+    transform: scale(1) rotate(135deg);
+  }
+  50% {
+    transform: scale(0.9) rotate(135deg);
+  }
+  100% {
+    transform: scale(1) rotate(135deg);
+  }
+}
+
+@keyframes arrow2 {
+  0% {
+    transform: scale(0.9) rotate(-45deg);
+  }
+  50% {
+    transform: scale(1) rotate(-45deg);
+  }
+  100% {
+    transform: scale(0.9) rotate(-45deg);
+  }
+}
+
+.img-choose {
+  transform: scale(0.35);
+  position: absolute;
+  top: -420px;
+  left: -360px;
+}
+
+.logo {
+  margin-top: -200px;
+  width: 550px;
+  height: 550px;
+  z-index: 1;
+}
+
+/*---------------------- В инструкции ----------------------*/
+.stast-block {
+  background-color: #f2dbb5;
+  height: 40%;
+  width: 100%;
+  border: #4b291f 4px solid;
+  outline: #6b382a 4px solid;
+  border-radius: 10px;
+}
+
+#texts {
+  width: 100%;
+  height: 89%;
+  color: #321b15;
+  font-weight: bold;
+  font-size: 2.2em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.money {
+  position: relative;
+}
+
+.instr-block {
+  background-color: #f2dbb5;
+  height: 55%;
+  width: 100%;
+  border: #4b291f 4px solid;
+  outline: #6b382a 4px solid;
+  border-radius: 10px;
+}
+
+.instr {
+  height: 90%;
+  width: 100%;
+  color: #321b15;
+  font-weight: bold;
+  margin-left: 10px;
+  font-size: 1.35em;
+  position: relative;
+}
+
+.instr > p {
+  color: #973820;
+  font-size: 1.6em;
+}
+
+.instr > hr {
+  position: absolute;
+  left: -15px;
+}
+
+.text-block3 {
+  border-bottom: #4b291f 4px solid;
+  height: 9.9%;
+  width: 100%;
+  background-color: #f2dbb5;
+  text-align: center;
+  line-height: 35px;
+  font-weight: bold;
+  color: #321b15;
+  font-size: 2.2em;
+}
+
+.text-block2 {
+  border-bottom: #4b291f 4px solid;
+  height: 9.9%;
+  width: 100%;
+  background-color: #f2dbb5;
+  text-align: center;
+  line-height: 50px;
+  font-weight: bold;
+  color: #321b15;
+  font-size: 2.2em;
+}
+
+/*---------------------- Для фона ----------------------*/
+#video_bg {
+  filter: blur(55px);
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  z-index: 1;
+  background: #ffffff;
+  background-size: cover;
+}
+
+#video_bg > video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;width: auto;
+  height: auto;
+}
+
+@supports (object-fit: cover) {
+  #video_bg > video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/*---------------------- game ----------------------*/
+#game {
+  display: none;
+}
+
+/*---------------------- before menu ----------------------*/
+#beforeMenu {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  top: 0%;
+  left: 0%;
+  z-index: 1;
+  justify-content: center;
+  align-items: center;
+}
+
+.in-before-menu {
+  display: flex;
+  flex-direction: column;
+  width: 876px;
+  height: 620px;
+  border: #4b291f 4px solid;
+  outline: #6b382a 4px solid;
+  background-color: #f2dbb5;
+  border-radius: 10px;
+}
+
+.buttons-before {
+  width: 100%;
+  height: 30%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-menu {
+  cursor: pointer;
+  border-radius: 10px;
+  margin-top: -5px;
+  padding-left: 45px;
+  padding-right: 45px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background: linear-gradient(
+    38deg,
+    rgba(126, 170, 196, 1) 0%,
+    rgba(102, 148, 178, 1) 50%,
+    rgba(126, 170, 196, 1) 100%
+  );
+  color: ivory;
+  font-size: 2em;
+  font-weight: bold;
+  padding-left: 15px;
+  padding-right: 15px;
+  box-shadow: 0px 10px 25px 1px black;
+  transition: 0.15s;
+}
+
+.menu-menu:active {
+  background: linear-gradient(
+    38deg,
+    rgb(196, 126, 126) 0%,
+    rgb(178, 102, 102) 50%,
+    rgb(196, 126, 126) 100%
+  );
+  transform: scale(0.8);
+}
+
+.text-before {
+  width: 100%;
+  height: 55%;
+  color: #321b15;
+  font-weight: bold;
+  font-size: 2.2em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.arct {
+  width: 100%;
+  height: 15%;
+  color: #972103;
+  font-weight: bold;
+  font-size: 3em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+#plusDeath {
+  color: #d31313;
+}
+
+#plusKills {
+  color: #13d333;
+}
+
+#plusMoney {
+  color: #d3c613;
+}
+
+.hearts{
+  position: fixed;
+  right: 40px;
+  bottom: 40px;
+  display: flex;
+  gap: 12px;
+  z-index: 9999;
+}
+
+.heart{
+  width: 65px;
+  height: 65px;
+    animation: heartBeat 1.2s infinite;
+}
+@keyframes heartBeat{
+
+  0%{
+    transform: scale(1);
+  }
+
+  25%{
+    transform: scale(1.15);
+  }
+
+  40%{
+    transform: scale(1);
+  }
+
+  60%{
+    transform: scale(1.15);
+  }
+
+  100%{
+    transform: scale(1);
+  }
+
+}
+.monster{
+position:absolute;
+width:100px;
+pointer-events:none;
+}
+
+
+
+.flashEffect{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(255,255,255,0.35);
+z-index:9998;
+animation: flashFade 0.35s ease-out;
+pointer-events:none;
+}
+
+@keyframes flashFade{
+0%{opacity:1;}
+100%{opacity:0;}
+}
+
+#roundVictory{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%) scale(0.8);
+font-size:90px;
+font-weight:800;
+font-family:Arial, sans-serif;
+letter-spacing:4px;
+
+color:white;
+
+text-shadow:
+0 0 10px rgba(255,255,255,0.8),
+0 0 25px rgba(255,255,255,0.5),
+0 0 60px rgba(255,255,255,0.3);
+
+opacity:0;
+
+z-index:9999;
+
+animation: roundVictoryAnim 10s ease forwards;
+}
+
+@keyframes roundVictoryAnim{
+
+0%{
+opacity:0;
+transform:translate(-50%,60%) scale(0.6);
+}
+
+15%{
+opacity:1;
+transform:translate(-50%,-50%) scale(1.05);
+}
+
+85%{
+opacity:1;
+transform:translate(-50%,-50%) scale(1);
+}
+
+100%{
+opacity:0;
+transform:translate(-50%,-80%) scale(0.9);
+}
+
+.store-text{
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.heart-item{
+pointer-events:none;
+}
+
+
+
+
+
+.button-menu:hover {
+  background: #5fa8ff !important;
+  transform: scale(1.1) !important;
+}
+
+.exit-menu:hover {
+  background: #ff6b6b !important;
+  transform: scale(1.1) !important;
+}
+
+
+

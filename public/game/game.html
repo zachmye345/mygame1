@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script defer src="/socket.io/socket.io.js"></script>
+    <script defer src="game.js"></script>
+    <link rel="stylesheet" href="menu.css" />
+    <link rel="stylesheet" href="game.css" />
+  </head>  
+  <body>
+    <div class="gif"></div>
+    <div class="map">
+      <div id="player_field"></div>
+      <div id="hitBlocks"></div>
+      <canvas id="myCanvas" class="background_map"></canvas>
+      <div class="kakaxi"></div>
+
+	  </div>
+	 
+
+    <div class="ui">
+      <p class="sap">Таблица лидеров</p>
+      <div class="score_list">
+      </div>
+	  <div class="hearts">
+    <img src="../images/stam111.png" class="heart" />
+    <img src="../images/stam111.png" class="heart" />
+    <img src="../images/stam111.png" class="heart" />
+	 <img src="../images/stam111.png" class="heart" />
+    <img src="../images/stam111.png" class="heart" />
+    <img src="../images/stam111.png" class="heart" />
+  </div>
+ 
+ 
+
+      <div class="bars">
+        <div class="level_bar">
+          <div id="level_bar">
+            <div id="zapol1"></div>
+          </div>
+          <div id="expImg">
+            <div id="level"></div>
+            <img src="../images/Exp.png" alt="exp.png" srcset="" />
+          </div>
+        </div>
+        <div class="stamina_bar">
+          <div id="stamina_bar">
+            <div id="zapol2"></div>
+          </div>
+          <img src="../images/stam.png" alt="stam.png" srcset="" />
+        </div>
+      </div>
+      <div class="money_score">
+        Количество ваших коинов: <span id="money_ui">0</span>
+      </div>
+
+    </div>
+
+ 
+    <!-- ----------------------------------------------------------------------------------------------------------------------------- -->
+    <div id="beforeMenu">
+      <div class="in-before-menu">
+        <div class="arct">ВАС УБИЛИ</div>
+        <div class="text-before">
+          <h2 style="margin-left: 10px;">Статистика:</h2>
+          <div class="moneyBefore" style="margin-left: 25px;">Кол-во монеток: <span id="moneyBefore">0 </span><span id="plusMoney"></span></div>
+          <div class="killBefore" style="margin-left: 25px;">Кол-во убийств: <span id="killBefore">0 </span><span id="plusKills"></span></div>
+          <div class="deathBefore" style="margin-left: 25px;">Кол-во смертей: <span id="deathBefore">0 </span><span id="plusDeath">+1</span></div>
+        </div>
+        <div class="buttons-before">
+          <div class="table">
+            <div class="menu-menu">В МЕНЮ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+<div class="main-block">
+  <div class="store-block">
+    <div class="text-block store-header">
+      <button type="button" class="store-arrow" onclick="changeStore(-1)">◀</button>
+      <span id="storeName">Магазин скинов</span>
+      <button type="button" class="store-arrow" onclick="changeStore(1)">▶</button>
+    </div>
+
+  <div id="skinsStore" class="store-list">
+      <div class="imgBlocks" onclick="showSkinInfo(1)" >
+        <div class="images">
+          <img src="../images/character1.png" />
+        </div>
+        <div class="store-text">
+  
+  
+          <span class="cena">100</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+       <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'skin', 1)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showSkinInfo(2)">
+        <div class="images">
+          <img src="../images/character2.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">150</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+     <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'skin', 2)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showSkinInfo(3)">
+        <div class="images">
+          <img src="../images/character3.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">250</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+     <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'skin', 3)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showSkinInfo(4)">
+        <div class="images">
+          <img src="../images/character4.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">300</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+       <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'skin', 4)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showSkinInfo(5)">
+        <div class="images">
+          <img src="../images/character5.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">400</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+      <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'skin', 5)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showSkinInfo(6)">
+        <div class="images">
+          <img src="../images/character6.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">750</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+        <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'skin', 6)">Купить</div>
+      </div>
+    </div>
+
+    <div id="weaponsStore" class="store-list" style="display: none;">
+      <div class="imgBlocks" onclick="showWeaponInfo(1)">
+        <div class="images">
+          <img src="../images/sword1.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">150</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+       <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'weapon', 1)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showWeaponInfo(2)">
+        <div class="images">
+          <img src="../images/sword2.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">250</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+       <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'weapon', 2)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showWeaponInfo(3)">
+        <div class="images">
+          <img src="../images/sword3.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">300</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+       <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'weapon', 3)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showWeaponInfo(4)">
+        <div class="images">
+          <img src="../images/sword4.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">500</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+      <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'weapon', 4)">Купить</div>
+      </div>
+    <div class="imgBlocks" onclick="showWeaponInfo(5)">
+        <div class="images">
+          <img src="../images/sword5.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">550</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+      <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'weapon', 5)">Купить</div>
+      </div>
+
+      <div class="imgBlocks" onclick="showWeaponInfo(6)">
+        <div class="images">
+          <img src="../images/sword6.png" />
+        </div>
+        <div class="store-text">
+          <span class="cena">700</span>
+          <img src="../images/coin.png" class="coin" />
+        </div>
+      <div class="button-store" onclick="event.stopPropagation(); buyItem(this.parentElement, 'weapon', 6)">Купить</div>
+      </div>
+    </div>
+  </div>
+      <div class="menu-block">
+        <img src="../images/logo.png" class="logo" />
+        <input
+          type="text"
+          placeholder="Введите ник"
+          maxlength="21"
+          class="input-menu"
+        />
+        <div class="slider">
+          <div class="arrow-left"></div>
+          <div data-current="0" class="player-choose">
+            <img src="../images/character0.png" class="img-choose" />
+          </div>
+          <div class="arrow-right"></div>
+        </div>
+        <div class="table">
+          <div class="button-menu">ИГРАТЬ</div>
+        </div>
+        <div class="table">
+          <div class="exit-menu">ВЫЙТИ</div>
+        </div>
+      </div>
+      <div class="info-block">
+        <div class="stast-block">
+          <div class="text-block3">Статистика</div>
+          <div id="texts">
+            <div class="money">Кол-во монеток: <span id="money">0</span></div>
+            <div class="kill">Кол-во убийств: <span id="kill">0</span></div>
+            <div class="death">Кол-во смертей: <span id="death">0</span></div>
+          </div>
+        </div>
+        <div class="instr-block">
+          <div class="text-block2">Управление</div>
+          <div class="instr">
+            <p>Курсор</p>
+            Движение<br />
+            <p>ЛКМ</p>
+            Атака<br />
+            <p>ПКМ</p>
+            Ускорение
+            <hr color="#4b291f" size="2px" width="400px" noshade />
+            <p>Советы</p>
+           1. Убивайте монстров — получайте золото.<br />
+           2. В арене можно найти роцветные шарики они для роста играка.<br />
+           3. С монстров иногда падают сердца. <br />
+			4. Используйте ускорение, чтобы избегать атак.<br />
+		
+          </div>
+        </div>
+      </div>
+    </div>
+	
+    <div id="video_bg">
+      <video width="100%" height="auto" preload="auto" autoplay="autoplay"
+      loop="loop" poster="../images/fonVideo.jpg">
+          <source src="../video/fonVideo.mp4" type="video/mp4"></source>
+		  <audio id="buySound" src="../sounds/buy.mp3"></audio>
+      </video>
+      </div>
+  </body>
+</html>

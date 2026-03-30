@@ -1,0 +1,240 @@
+.map {
+  display: none;
+  width: 5760px;
+  height: 3250px;
+}
+
+.gif {
+  display: none;
+  position: absolute;
+  width: 10000px;
+  height: 10000px;
+  background-image: url(http://designe-r.in.ua/wp-content/uploads/_/podborka-besplatnykh-fonov-zvyozdnogo-neba/76588.jpg);
+  filter: blur(25px);
+  box-shadow: black 0px 0px 10px 10px;
+}
+.player {
+  position: absolute;
+  z-index: 10;
+}
+.player_img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220%;
+  height: 220%;
+}
+.sword_img {
+  width: 180%;
+  height: 180%;
+}
+.sword {
+  position: absolute;
+  z-index: 10;
+  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100% 0px;
+  transform: rotate(-40deg) scale(1.2);
+}
+#player_field {
+  width: 5760px;
+  height: 3250px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+#hitBlocks {
+  width: 5760px;
+  height: 3250px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+.background_map {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.kakaxi {
+  width: 5760px;
+  height: 3250px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+.kakaxa {
+  position: absolute;
+  border-radius: 50%;
+  z-index: 9;
+  border: 1px black solid;
+}
+.error {
+  font-weight: bold;
+  margin: -35px;
+  color: rgb(255, 0, 0);
+  font-size: 2em;
+}
+
+@keyframes hit {
+  0% {
+    transform: rotateZ(-40deg) scale(1.2);
+  }
+  50% {
+    transform: rotateZ(-130deg) scale(1.2);
+  }
+  100% {
+    transform: rotateZ(-40deg) scale(1.2);
+  }
+}
+/*//////////        UI        ////////*/
+.ui {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(58, 58, 58, 0) 77%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  border-radius: 0px;
+  top: 0%;
+  left: 0%;
+  z-index: 1;
+}
+.score_list {
+  position: absolute;
+  width: 20%;
+  height: 280px;
+  top: 5%;
+  right: 2%;
+  opacity: 0.7;
+  border: #4b291f 4px solid;
+  outline: #6b382a 4px solid;
+  background-color: #f2dbb5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sap {
+  position: fixed;
+  width: 320px;
+  height: 50px;
+  color: wheat;
+  font-weight: bold;
+  line-height: 50px;
+  text-align: center;
+  top: 0%;
+  right: 4%;
+  font-size: 2em;
+  background-color: #4b291f;
+}
+.score_player {
+  opacity: 1;
+  color: #321b15;
+  padding: 10px;
+  font-weight: bold;
+  font-size: 1.5em;
+  width: 100%;
+  height: 50px;
+}
+.bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  width: 90%;
+  height: 32%;
+  position: fixed;
+  bottom: 5%;
+  left: 50%;
+  transform: translate(-50%);
+}
+#level_bar {
+  width: 100%;
+  height: 100%;
+  border: #4b291f 6px solid;
+}
+#expImg {
+  display: flex;
+  flex-direction: column;
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  bottom: -50%;
+  left: -5%;
+}
+#level {
+  color: #4b291f;
+  font-size: 3em;
+  text-align: center;
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  transform: translate(-50%);
+}
+#stamina_bar {
+  width: 100%;
+  height: 100%;
+  border: #4b291f 6px solid;
+}
+#zapol1 {
+  width: 0%;
+  height: 100%;
+  background-color: rgb(255, 198, 64);
+}
+#zapol2 {
+  width: 100%;
+  height: 100%;
+  border-radius: 0%;
+  background-color: rgb(0, 122, 6);
+}
+.level_bar {
+  position: relative;
+  width: 50%;
+  height: 18%;
+}
+.stamina_bar {
+  position: relative;
+  margin-top: 25px;
+  width: 40%;
+  height: 12%;
+}
+.stamina_bar > img {
+  width: 75px;
+  height: 75px;
+  position: absolute;
+  bottom: -60%;
+  left: -5%;
+}
+#expImg > img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+.money_score {
+  position: fixed;
+  top: 0%;
+  left: 0%;
+  padding: 15px;
+  border: #4b291f 4px solid;
+  outline: #6b382a 4px solid;
+  background-color: #f2dbb5;
+  color: #321b15;
+  font-size: 1.5em;
+  font-weight: bold;
+  opacity: 0.7;
+}
