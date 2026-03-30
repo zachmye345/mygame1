@@ -396,13 +396,6 @@
         animation: spinSlow 18s linear infinite;
       }
 
-      .scene-orbit.fast {
-        width: 320px;
-        height: 320px;
-        animation-duration: 12s;
-        animation-direction: reverse;
-      }
-
       .orbit-item {
         position: absolute;
         width: 120px;
@@ -419,20 +412,6 @@
       .scene-orbit .orbit-item:last-child {
         left: 302px;
         top: 258px;
-      }
-
-      .scene-orbit.fast .orbit-item:first-child {
-        top: 38px;
-        left: 222px;
-        width: 86px;
-        height: 86px;
-      }
-
-      .scene-orbit.fast .orbit-item:last-child {
-        top: 226px;
-        left: 22px;
-        width: 86px;
-        height: 86px;
       }
 
       .player-core {
@@ -497,78 +476,6 @@
         border-top-color: rgba(127, 218, 255, 0.82);
         border-right-color: rgba(127, 218, 255, 0.24);
         animation-delay: 0.2s;
-      }
-
-      .scene-coin {
-        position: absolute;
-        width: 86px;
-        height: 86px;
-        object-fit: contain;
-        filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.34));
-        animation: coinBob 2.3s ease-in-out infinite;
-      }
-
-      .scene-coin.a {
-        left: 120px;
-        top: 420px;
-      }
-
-      .scene-coin.b {
-        right: 128px;
-        top: 148px;
-        animation-delay: 0.8s;
-      }
-
-      .callout {
-        position: absolute;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: 220px;
-        padding: 12px 14px;
-        border-radius: 20px;
-        background: rgba(7, 14, 28, 0.86);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
-      }
-
-      .callout img {
-        width: 48px;
-        height: 48px;
-        object-fit: contain;
-        flex: 0 0 auto;
-      }
-
-      .callout strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 16px;
-      }
-
-      .callout span {
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.45;
-      }
-
-      .callout.skin {
-        top: 38px;
-        left: 16px;
-      }
-
-      .callout.weapon {
-        top: 44px;
-        right: 18px;
-      }
-
-      .callout.monsters {
-        bottom: 40px;
-        left: 26px;
-      }
-
-      .callout.progress {
-        bottom: 42px;
-        right: 18px;
       }
 
       section.content {
@@ -688,16 +595,6 @@
         }
       }
 
-      @keyframes coinBob {
-        0%,
-        100% {
-          transform: translateY(0px) rotate(0deg);
-        }
-        50% {
-          transform: translateY(-10px) rotate(8deg);
-        }
-      }
-
       @media (max-width: 1120px) {
         .hero-grid {
           grid-template-columns: 1fr;
@@ -748,35 +645,6 @@
           min-height: 500px;
         }
 
-        .callout {
-          width: 182px;
-          padding: 10px 12px;
-        }
-
-        .callout span {
-          font-size: 12px;
-        }
-
-        .callout.skin {
-          top: 14px;
-          left: 10px;
-        }
-
-        .callout.weapon {
-          top: 14px;
-          right: 10px;
-        }
-
-        .callout.monsters {
-          bottom: 14px;
-          left: 10px;
-        }
-
-        .callout.progress {
-          bottom: 14px;
-          right: 10px;
-        }
-
         .scene-root {
           width: 560px;
           height: 560px;
@@ -794,18 +662,6 @@
 
         .arena-stage {
           min-height: 560px;
-        }
-
-        .callout {
-          width: 168px;
-        }
-
-        .callout strong {
-          font-size: 14px;
-        }
-
-        .callout span {
-          display: none;
         }
 
         .scene-root {
@@ -877,52 +733,12 @@
                     <img class="orbit-item" src="./images/monct5.png" alt="Monster" />
                   </div>
 
-                  <div class="scene-orbit fast">
-                    <img class="orbit-item" src="./images/coin.png" alt="Coin" />
-                    <img class="orbit-item" src="./images/coin.png" alt="Coin" />
-                  </div>
-
                   <div class="player-core">
                     <div class="player-shadow"></div>
                     <img class="player-avatar" src="./images/character6.png" alt="Player" />
                     <img class="weapon-swing" src="./images/sword5.png" alt="Weapon swing" />
                     <div class="slash-arc"></div>
                     <div class="slash-arc secondary"></div>
-                  </div>
-
-                  <img class="scene-coin a" src="./images/coin.png" alt="Coin reward" />
-                  <img class="scene-coin b" src="./images/coin.png" alt="Coin reward" />
-
-                  <div class="callout skin">
-                    <img src="./images/character4.png" alt="Skin" />
-                    <div>
-                      <strong>Скины</strong>
-                      <span>Герой выглядит живее и аккуратнее в собранной сцене.</span>
-                    </div>
-                  </div>
-
-                  <div class="callout weapon">
-                    <img src="./images/sword4.png" alt="Weapon" />
-                    <div>
-                      <strong>Оружие</strong>
-                      <span>Меч больше не лежит мёртво, а даёт ощущение настоящего удара.</span>
-                    </div>
-                  </div>
-
-                  <div class="callout monsters">
-                    <img src="./images/monct1.png" alt="Monster" />
-                    <div>
-                      <strong>Монстры</strong>
-                      <span>Враги не просто висят, а двигаются по орбитам и держат давление.</span>
-                    </div>
-                  </div>
-
-                  <div class="callout progress">
-                    <img src="./images/coin.png" alt="Progress" />
-                    <div>
-                      <strong>Прогресс</strong>
-                      <span>Награды и развитие теперь читаются даже на главной странице сайта.</span>
-                    </div>
                   </div>
                 </div>
               </div>
