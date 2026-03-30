@@ -233,9 +233,7 @@ let player_x = 0;
 let player_y = 0;
 let world = document.querySelector(".map");
 exit.addEventListener("click", () => {
-  window.location.href = "https://www.google.com.ua/";
-  // window.close();
-  // socket.emit("exit");
+  window.close();
 });
 let asd = 0;
 setInterval(() => {

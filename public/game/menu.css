@@ -447,8 +447,12 @@ html {
   left: 0;
   overflow: hidden;
   z-index: 1;
-  background: #ffffff;
-  background-size: cover;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(95, 140, 255, 0.28), transparent 32%),
+    radial-gradient(circle at 80% 30%, rgba(180, 110, 255, 0.2), transparent 26%),
+    radial-gradient(circle at 50% 80%, rgba(80, 170, 255, 0.18), transparent 30%),
+    #020814 url("../images/fonVideo.jpg") center / cover no-repeat;
+  pointer-events: none;
 }
 
 #video_bg > video {
@@ -456,8 +460,11 @@ html {
   top: 0;
   left: 0;
   min-width: 100%;
-  min-height: 100%;width: auto;
+  min-height: 100%;
+  width: auto;
   height: auto;
+  opacity: 0.78;
+  filter: saturate(1.1) brightness(0.92);
 }
 
 @supports (object-fit: cover) {

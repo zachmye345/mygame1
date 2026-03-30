@@ -38,10 +38,16 @@ async function onAppReady() {
   localServer = await createServer();
 
   const game = new BrowserWindow({
+    width: 1440,
+    height: 900,
+    minWidth: 1100,
+    minHeight: 700,
     autoHideMenuBar: true,
-    resizable: false,
+    resizable: true,
+    maximizable: true,
+    fullscreenable: true,
     show: false,
-    backgroundColor: "#000000",
+    backgroundColor: "#020814",
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -64,6 +70,7 @@ async function onAppReady() {
   });
 
   game.once("ready-to-show", () => {
+    game.maximize();
     game.show();
     if (!loadScreen.isDestroyed()) {
       loadScreen.close();
@@ -85,7 +92,6 @@ async function onAppReady() {
   );
 
   game.webContents.setZoomFactor(1);
-  game.setFullScreen(true);
 
   await loadScreen.loadFile(path.join(__dirname, "public", "load", "load.html"));
   await game.loadURL(`http://127.0.0.1:${PORT}/game/game.html`);
