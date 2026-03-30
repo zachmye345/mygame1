@@ -558,6 +558,29 @@ function rectanglesIntersect(rectA, rectB) {
   );
 }
 
+let activeWeaponHitbox = null;
+let activeWeaponHitboxTimer = null;
+
+function setActiveWeaponHitbox(hitbox) {
+  const expand = Math.max(55, 30 * rangeIncrease);
+
+  activeWeaponHitbox = {
+    left: Number(hitbox.x) - expand,
+    top: Number(hitbox.y) - expand,
+    right: Number(hitbox.x2) + expand,
+    bottom: Number(hitbox.y2) + expand,
+  };
+
+  if (activeWeaponHitboxTimer) {
+    clearTimeout(activeWeaponHitboxTimer);
+  }
+
+  activeWeaponHitboxTimer = setTimeout(() => {
+    activeWeaponHitbox = null;
+    activeWeaponHitboxTimer = null;
+  }, 240);
+}
+
 function getWeaponHitboxRect() {
   const player = getPlayerCollisionTarget();
 
@@ -605,13 +628,32 @@ function getWeaponHitboxRect() {
   }
 }
 
-function isMonsterInWeaponHitbox(monsterRect) {
+function getMonsterMapRect(monster, monsterX, monsterY) {
+  const monsterSize =
+    parseFloat(monster.style.width) || monster.offsetWidth || 300;
+
+  return {
+    left: monsterX,
+    top: monsterY,
+    right: monsterX + monsterSize,
+    bottom: monsterY + monsterSize,
+  };
+}
+
+function isMonsterInWeaponHitbox(monster, monsterX, monsterY) {
+  const monsterMapRect = getMonsterMapRect(monster, monsterX, monsterY);
+
+  if (activeWeaponHitbox) {
+    return rectanglesIntersect(activeWeaponHitbox, monsterMapRect);
+  }
+
   const weaponHitbox = getWeaponHitboxRect();
 
   if (!weaponHitbox) {
     return false;
   }
 
+  const monsterRect = monster.getBoundingClientRect();
   return rectanglesIntersect(weaponHitbox, monsterRect);
 }
 
@@ -1007,6 +1049,7 @@ function hit() {
       socket.emit("player_hit", hitBlockf, my_num, side);
       break;
   }
+  setActiveWeaponHitbox(hitBlockf);
   setTimeout(() => {
     mosey2 = false;
     if (!countdownActive && !gamePaused && map.style.display !== "none") {
@@ -1889,7 +1932,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
@@ -2462,7 +2505,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
@@ -2748,7 +2791,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
@@ -3068,7 +3111,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
@@ -3390,7 +3433,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
@@ -3711,7 +3754,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
@@ -4033,7 +4076,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
@@ -4354,7 +4397,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monsterRect)){
+    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
 
       monsterHP--;
 
