@@ -107,6 +107,7 @@ socket.on("connect", () => {
   socket.on("some_player_disconnect", (num, players) => {
     if (my_num === num && start2 != 0) {
       start3 = 0;
+      setStartRequestActive(false);
       unbindGameControls();
       stopMovement();
       pauseOverlay.style.display = "none";
@@ -161,6 +162,8 @@ socket.on("connect", () => {
   });
   socket.on("spawn", (num, x, y, skin, size, players) => {
     my_num = num;
+    setStartRequestActive(false);
+    showGameplayScene();
     playerElem = firstCreatePlayer(x, y, skin, size);
     startArenaTimer();
     // clearList();
@@ -263,6 +266,28 @@ let controlsBound = false;
 let countdownActive = false;
 let countdownTimerId = null;
 let countdownElement = null;
+let startRequestActive = false;
+
+function setStartRequestActive(active) {
+  startRequestActive = active;
+  start.style.pointerEvents = active ? "none" : "auto";
+  start.style.opacity = active ? "0.7" : "1";
+}
+
+function showGameplayScene() {
+  video_bg.style.display = "none";
+  menu.style.display = "none";
+  beforeMenu.style.display = "none";
+  ui.style.display = "block";
+  map.style.display = "block";
+  map.style.filter = "blur(0px)";
+  gif.style.display = "block";
+  pauseOverlay.style.display = "none";
+  pauseBtn.style.display = "none";
+  setArenaViewportActive(true);
+  money_ui.textContent = localStorage.getItem("money");
+  syncViewportLayout();
+}
 
 function setArenaViewportActive(active) {
   const viewportSize = active ? `${ARENA_VIEWPORT_SIZE}px` : "100%";
@@ -398,6 +423,10 @@ window.addEventListener("resize", syncViewportLayout);
 syncViewportLayout();
 
 start.addEventListener("click", () => {
+  if (startRequestActive) {
+    return;
+  }
+
   let ae = document.querySelector(".error");
   if (input.value === "") {
     if (!ae) {
@@ -420,19 +449,20 @@ start.addEventListener("click", () => {
     level.textContent = lvl;
     playerStartCount++;
     start2++;
-    video_bg.style.display = "none";
-    menu.style.display = "none";
-    ui.style.display = "block";
-    map.style.display = "block";
-    gif.style.display = "block";
+    setStartRequestActive(true);
+    video_bg.style.display = "block";
+    menu.style.display = "flex";
+    ui.style.display = "none";
+    map.style.display = "none";
+    gif.style.display = "none";
     pauseOverlay.style.display = "none";
     pauseBtn.style.display = "none";
     stopMovement();
     unbindGameControls();
-    setArenaViewportActive(true);
+    setArenaViewportActive(false);
+    window.scrollTo(0, 0);
     syncViewportLayout();
     let skin = localStorage.getItem("skin");
-    money_ui.textContent = localStorage.getItem("money");
     let x = randomInteger(550, 5060);
     let y = randomInteger(550, 2500);
     socket.emit("spawn", x, y, input.value, skin, 150, playerStartCount);
@@ -1226,6 +1256,7 @@ let beforeMenuBtn = document.querySelector(".menu-menu");
 beforeMenuBtn.addEventListener("click", () => {
   socket.emit("number");
   start3 = 0;
+  setStartRequestActive(false);
   unbindGameControls();
   stopMovement();
   gamePaused = false;
@@ -1331,6 +1362,13 @@ function monsterSpawnDelay(delay) {
   return Math.max(800, Math.floor(delay * 0.8));
 }
 
+function getRandomMonsterSpawn(monsterSize) {
+  return {
+    x: randomInteger(0, Math.max(0, MAP_WIDTH - monsterSize)),
+    y: randomInteger(0, Math.max(0, MAP_HEIGHT - monsterSize)),
+  };
+}
+
 // ---------------- MONSTER ----------------
 
 setTimeout(() => {
@@ -1341,8 +1379,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -1679,8 +1718,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -2204,8 +2244,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -2522,8 +2563,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -2842,8 +2884,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -3161,8 +3204,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -3481,8 +3525,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -3800,8 +3845,9 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(300);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -4339,8 +4385,7 @@ soundBtn.onclick = function(){
 // 💾 СЕЙВ
 // ==========================
 
-saveBtn.onclick = function(){
-
+function saveGameProgress() {
   let save = {
     coins: typeof coins !== "undefined" ? coins : 0,
     kills: typeof kills !== "undefined" ? kills : 0,
@@ -4355,6 +4400,10 @@ saveBtn.onclick = function(){
   localStorage.setItem("money", save.coins);
   localStorage.setItem("kill", save.kills);
   localStorage.setItem("death", save.deaths);
+}
+
+saveBtn.onclick = function(){
+  saveGameProgress();
 
   // уведомление
   let text = document.createElement("div");
@@ -4398,7 +4447,8 @@ if(load){
 // ==========================
 
 exitBtn.onclick = function(){
-  closeDesktopApp();
+  saveGameProgress();
+  location.reload();
 };
 
 
@@ -4511,8 +4561,9 @@ function createMonster() {
 
   document.querySelector(".map").appendChild(monster);
 
-  let monsterX = 500;
-  let monsterY = 300;
+  const monsterSpawn = getRandomMonsterSpawn(200);
+  let monsterX = monsterSpawn.x;
+  let monsterY = monsterSpawn.y;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
