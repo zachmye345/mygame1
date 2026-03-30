@@ -188,10 +188,7 @@
       .glass,
       .hero-copy,
       .arena-shell,
-      .feature-card,
-      .control-card,
-      .gallery-card,
-      .cta-card {
+      .control-card {
         border: 1px solid var(--line);
         background: var(--panel);
         box-shadow: var(--shadow);
@@ -270,36 +267,6 @@
         border-color: rgba(127, 218, 255, 0.22);
       }
 
-      .button.ghost {
-        background: rgba(255, 255, 255, 0.02);
-        border-color: rgba(255, 255, 255, 0.08);
-      }
-
-      .hero-badges {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .hero-badge {
-        padding: 18px;
-        border-radius: 18px;
-        background: rgba(6, 13, 25, 0.58);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      .hero-badge strong {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 18px;
-      }
-
-      .hero-badge span {
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.5;
-      }
-
       .mini-stats {
         display: flex;
         flex-wrap: wrap;
@@ -330,55 +297,6 @@
         gap: 18px;
         padding: 22px;
         border-radius: 32px;
-      }
-
-      .arena-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: center;
-        padding: 10px 12px;
-        border-radius: 20px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
-
-      .toolbar-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .toolbar-chip,
-      .toolbar-button {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 42px;
-        padding: 10px 14px;
-        border-radius: 999px;
-        font-size: 14px;
-      }
-
-      .toolbar-chip {
-        background: rgba(127, 218, 255, 0.08);
-        border: 1px solid rgba(127, 218, 255, 0.18);
-        color: #cbf0ff;
-      }
-
-      .toolbar-button {
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
-        color: var(--text);
-        cursor: pointer;
-        transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-      }
-
-      .toolbar-button:hover {
-        transform: translateY(-1px);
-        border-color: rgba(127, 218, 255, 0.26);
-        background: rgba(127, 218, 255, 0.08);
       }
 
       .arena-stage {
@@ -653,31 +571,6 @@
         right: 18px;
       }
 
-      .preview-strip {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .preview-card {
-        padding: 16px 16px 18px;
-        border-radius: 20px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-      }
-
-      .preview-card strong {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 18px;
-      }
-
-      .preview-card span {
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.55;
-      }
-
       section.content {
         padding: 20px 0 26px;
       }
@@ -701,71 +594,6 @@
         margin: 0;
         color: var(--muted);
         line-height: 1.6;
-      }
-
-      .feature-grid,
-      .showcase-grid {
-        display: grid;
-        gap: 18px;
-      }
-
-      .feature-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .feature-card {
-        padding: 24px;
-        border-radius: 26px;
-      }
-
-      .feature-card .icon {
-        display: inline-grid;
-        place-items: center;
-        width: 54px;
-        height: 54px;
-        margin-bottom: 16px;
-        border-radius: 18px;
-        background: rgba(127, 218, 255, 0.1);
-        color: var(--blue);
-        font-size: 20px;
-        font-weight: 900;
-      }
-
-      .feature-card h3 {
-        margin: 0 0 10px;
-        font-size: 22px;
-      }
-
-      .feature-card p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.65;
-      }
-
-      .browser-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 20px;
-      }
-
-      .browser-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 46px;
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: rgba(247, 240, 223, 0.86);
-        font-size: 14px;
-      }
-
-      .control-grid {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 18px;
       }
 
       .control-card {
@@ -798,146 +626,6 @@
         margin-top: 8px;
         color: var(--muted);
         font-size: 14px;
-      }
-
-      .progress-list {
-        display: grid;
-        gap: 14px;
-        margin-top: 20px;
-      }
-
-      .progress-item {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 14px;
-        align-items: start;
-      }
-
-      .progress-step {
-        display: inline-grid;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: rgba(255, 213, 112, 0.14);
-        color: var(--gold);
-        font-weight: 900;
-      }
-
-      .progress-copy strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 18px;
-      }
-
-      .progress-copy span {
-        color: var(--muted);
-        font-size: 15px;
-        line-height: 1.55;
-      }
-
-      .showcase-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .gallery-card {
-        position: relative;
-        overflow: hidden;
-        min-height: 300px;
-        padding: 24px;
-        border-radius: 28px;
-      }
-
-      .gallery-card h3 {
-        max-width: 230px;
-        margin: 0 0 10px;
-        font-size: 30px;
-        line-height: 1;
-      }
-
-      .gallery-card p {
-        max-width: 250px;
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      .gallery-card img {
-        position: absolute;
-        right: 16px;
-        bottom: 18px;
-        width: 44%;
-        max-width: 170px;
-        height: auto;
-        object-fit: contain;
-        filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.34));
-      }
-
-      .gallery-card.coins {
-        background:
-          radial-gradient(circle at top left, rgba(255, 213, 112, 0.18), transparent 30%),
-          rgba(10, 20, 40, 0.84);
-      }
-
-      .gallery-card.style {
-        background:
-          radial-gradient(circle at top right, rgba(127, 218, 255, 0.18), transparent 30%),
-          rgba(10, 20, 40, 0.84);
-      }
-
-      .gallery-card.monsters {
-        background:
-          radial-gradient(circle at top right, rgba(255, 123, 114, 0.16), transparent 34%),
-          rgba(10, 20, 40, 0.84);
-      }
-
-      .cta {
-        padding: 26px 0 44px;
-      }
-
-      .cta-card {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 18px;
-        align-items: center;
-        padding: 30px;
-        border-radius: 30px;
-      }
-
-      .cta-card h2 {
-        margin: 0 0 10px;
-        font-size: clamp(32px, 5vw, 56px);
-        line-height: 0.98;
-      }
-
-      .cta-card p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.65;
-      }
-
-      .toast {
-        position: fixed;
-        right: 20px;
-        bottom: 20px;
-        z-index: 50;
-        min-width: 240px;
-        max-width: min(380px, calc(100vw - 40px));
-        padding: 14px 16px;
-        border-radius: 16px;
-        background: rgba(9, 17, 33, 0.96);
-        border: 1px solid rgba(127, 218, 255, 0.16);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
-        color: #fff;
-        opacity: 0;
-        transform: translateY(20px);
-        pointer-events: none;
-        transition: opacity 0.2s ease, transform 0.2s ease;
-      }
-
-      .toast.visible {
-        opacity: 1;
-        transform: translateY(0);
       }
 
       .footer {
@@ -1011,20 +699,12 @@
       }
 
       @media (max-width: 1120px) {
-        .hero-grid,
-        .control-grid,
-        .feature-grid,
-        .showcase-grid,
-        .cta-card {
+        .hero-grid {
           grid-template-columns: 1fr;
         }
 
         .arena-stage {
           min-height: 560px;
-        }
-
-        .cta-card {
-          align-items: start;
         }
       }
 
@@ -1047,21 +727,15 @@
 
         .hero-copy,
         .arena-shell,
-        .feature-card,
-        .control-card,
-        .gallery-card,
-        .cta-card {
+        .control-card {
           border-radius: 24px;
         }
 
         .hero-copy,
-        .control-card,
-        .cta-card {
+        .control-card {
           padding: 24px;
         }
 
-        .hero-badges,
-        .preview-strip,
         .keys {
           grid-template-columns: 1fr 1fr;
         }
@@ -1072,16 +746,6 @@
 
         .arena-stage {
           min-height: 500px;
-        }
-
-        .toolbar-group {
-          width: 100%;
-        }
-
-        .toolbar-button,
-        .toolbar-chip {
-          flex: 1 1 0;
-          justify-content: center;
         }
 
         .callout {
@@ -1120,13 +784,10 @@
       }
 
       @media (max-width: 540px) {
-        .hero-copy h1,
-        .cta-card h2 {
+        .hero-copy h1 {
           line-height: 0.94;
         }
 
-        .hero-badges,
-        .preview-strip,
         .keys {
           grid-template-columns: 1fr;
         }
@@ -1168,13 +829,12 @@
             <img src="./images/logo.png" alt="EggArena" />
             <span class="brand-copy">
               <strong>EggArena</strong>
-              <span>Browser Arena</span>
+              <span>GitHub Pages</span>
             </span>
           </a>
 
           <nav class="nav">
             <a href="#play">Играть</a>
-            <a href="#browser">Браузер</a>
             <a href="#controls">Управление</a>
           </nav>
         </div>
@@ -1204,26 +864,6 @@
             </div>
 
             <div class="arena-shell">
-              <div class="arena-toolbar">
-                <div class="toolbar-group">
-                  <span class="toolbar-chip">Сайт живой</span>
-                  <span class="toolbar-chip">Анимированный меч</span>
-                  <span class="toolbar-chip">Адаптивный масштаб</span>
-                </div>
-
-                <div class="toolbar-group">
-                  <button class="toolbar-button" id="fullscreenButton" type="button">
-                    Полный экран
-                  </button>
-                  <button class="toolbar-button" id="motionButton" type="button">
-                    Motion: On
-                  </button>
-                  <button class="toolbar-button" id="copyButton" type="button">
-                    Копировать ссылку
-                  </button>
-                </div>
-              </div>
-
               <div class="arena-stage" id="arenaStage">
                 <div class="scene-surface">
                   <div class="scene-grid"></div>
@@ -1286,27 +926,12 @@
                   </div>
                 </div>
               </div>
-
-              <div class="preview-strip">
-                <div class="preview-card">
-                  <strong>Fullscreen</strong>
-                  <span>Можно развернуть страницу целиком и сразу запускать браузерный режим с красивой витриной.</span>
-                </div>
-                <div class="preview-card">
-                  <strong>Motion Toggle</strong>
-                  <span>Если анимации много, их можно убрать одной кнопкой без перезагрузки страницы.</span>
-                </div>
-                <div class="preview-card">
-                  <strong>Share Ready</strong>
-                  <span>Сайт уже можно открыть, скопировать ссылку и сразу отправить как обычную web-игру.</span>
-                </div>
-              </div>
             </div>
           </div>
         </section>
 
         <section class="content" id="controls">
-          <div class="shell control-grid">
+          <div class="shell">
             <article class="control-card">
               <div class="section-head">
                 <h2>Управление</h2>
@@ -1340,77 +965,18 @@
                 </div>
               </div>
             </article>
-
-            <article class="control-card" id="browser">
-              <div class="section-head">
-                <h2>Браузер</h2>
-                <p>
-                  Полезные кнопки прямо на сайте.
-                </p>
-              </div>
-
-              <div class="browser-actions">
-                <span class="browser-chip">Fullscreen</span>
-                <span class="browser-chip">Motion On/Off</span>
-                <span class="browser-chip">Копировать ссылку</span>
-                <span class="browser-chip">Parallax сцены</span>
-                <span class="browser-chip">Анимированный удар</span>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="content">
-          <div class="shell">
-            <div class="section-head">
-              <h2>Что ждёт на арене</h2>
-              <p>Коротко по сути.</p>
-            </div>
-
-            <div class="showcase-grid">
-              <article class="gallery-card coins">
-                <h3>Собирай монеты и открывай новое</h3>
-                <p>
-                  Покупай новые скины и оружие.
-                </p>
-                <img src="./images/coin.png" alt="Coin reward" />
-              </article>
-
-              <article class="gallery-card style">
-                <h3>Меняй стиль</h3>
-                <p>
-                  Выбирай внешний вид героя под свой стиль.
-                </p>
-                <img src="./images/character2.png" alt="Character skin" />
-              </article>
-
-              <article class="gallery-card monsters">
-                <h3>Не стой на месте</h3>
-                <p>
-                  Монстры давят и заставляют двигаться.
-                </p>
-                <img src="./images/monct6.png" alt="Monster attack" />
-              </article>
-            </div>
           </div>
         </section>
       </main>
 
       <footer class="footer">
-        <div class="shell">EggArena Web. Браузерная версия для запуска с GitHub Pages.</div>
+        <div class="shell">EggArena на GitHub Pages.</div>
       </footer>
     </div>
-
-    <div class="toast" id="toast"></div>
 
     <script>
       const stage = document.getElementById("arenaStage");
       const sceneRoot = document.getElementById("sceneRoot");
-      const fullscreenButton = document.getElementById("fullscreenButton");
-      const motionButton = document.getElementById("motionButton");
-      const copyButton = document.getElementById("copyButton");
-      const toast = document.getElementById("toast");
-      let toastTimer = null;
 
       function syncSceneScale() {
         if (!stage || !sceneRoot) {
@@ -1421,19 +987,6 @@
         const stageHeight = stage.clientHeight;
         const scale = Math.min(stageWidth / 660, stageHeight / 660);
         sceneRoot.style.setProperty("--scene-scale", Math.max(scale, 0.45).toFixed(3));
-      }
-
-      function showToast(message) {
-        if (!toast) {
-          return;
-        }
-
-        toast.textContent = message;
-        toast.classList.add("visible");
-        window.clearTimeout(toastTimer);
-        toastTimer = window.setTimeout(() => {
-          toast.classList.remove("visible");
-        }, 2200);
       }
 
       if (stage && sceneRoot) {
@@ -1450,36 +1003,6 @@
           sceneRoot.style.setProperty("--tilt-x", "0deg");
         });
       }
-
-      fullscreenButton?.addEventListener("click", async () => {
-        try {
-          if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen();
-            showToast("Сайт открыт в полном экране");
-          } else {
-            await document.exitFullscreen();
-            showToast("Полный экран выключен");
-          }
-        } catch (error) {
-          showToast("Браузер не дал включить fullscreen");
-        }
-      });
-
-      motionButton?.addEventListener("click", () => {
-        document.body.classList.toggle("reduced-motion");
-        const reduced = document.body.classList.contains("reduced-motion");
-        motionButton.textContent = reduced ? "Motion: Off" : "Motion: On";
-        showToast(reduced ? "Анимации уменьшены" : "Анимации снова включены");
-      });
-
-      copyButton?.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(window.location.href);
-          showToast("Ссылка скопирована");
-        } catch (error) {
-          showToast("Не удалось скопировать ссылку");
-        }
-      });
 
       window.addEventListener("resize", syncSceneScale);
       syncSceneScale();
