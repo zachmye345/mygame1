@@ -6,6 +6,7 @@
   width: 1700px;
   height: 950px;
   overflow: hidden;
+  background: #02060a;
   transform: translate(-50%, -50%) scale(1);
   transform-origin: center center;
   z-index: 1;

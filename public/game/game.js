@@ -506,13 +506,10 @@ function fitArenaViewport() {
     return;
   }
 
-  const scale = Math.min(
-    window.innerWidth / ARENA_BASE_WIDTH,
-    window.innerHeight / ARENA_BASE_HEIGHT,
-    1
-  );
+  const scaleX = window.innerWidth / ARENA_BASE_WIDTH + 0.002;
+  const scaleY = window.innerHeight / ARENA_BASE_HEIGHT + 0.002;
 
-  arenaViewport.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  arenaViewport.style.transform = `translate(-50%, -50%) scale(${scaleX}, ${scaleY})`;
 }
 
 function getPlayerSize() {
