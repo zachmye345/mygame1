@@ -524,6 +524,61 @@ function getPlayerSize() {
   return playerElem.offsetWidth || playerElem.getBoundingClientRect().width || 150;
 }
 
+function getPlayerCollisionTarget() {
+  return playerElem || document.querySelector("#player_field .player");
+}
+
+function getPlayerVisualTarget() {
+  const playerNode = getPlayerCollisionTarget();
+  return playerNode?.querySelector(".player_img") || playerNode;
+}
+
+function getRectCenter(rect) {
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+}
+
+function getRectMetrics(targetRect, sourceRect) {
+  const targetCenter = getRectCenter(targetRect);
+  const sourceCenter = getRectCenter(sourceRect);
+  const dx = targetCenter.x - sourceCenter.x;
+  const dy = targetCenter.y - sourceCenter.y;
+
+  return {
+    dx,
+    dy,
+    distance: Math.hypot(dx, dy),
+  };
+}
+
+function isMonsterTouchingPlayer(playerRect, monsterRect) {
+  const { distance } = getRectMetrics(playerRect, monsterRect);
+  const playerRadius = Math.min(playerRect.width, playerRect.height) * 0.28;
+  const monsterRadius = Math.min(monsterRect.width, monsterRect.height) * 0.24;
+
+  return distance <= playerRadius + monsterRadius;
+}
+
+function isMonsterInAttackRange(playerRect, monsterRect) {
+  const { distance } = getRectMetrics(playerRect, monsterRect);
+  const playerReach = Math.min(playerRect.width, playerRect.height) * 0.4;
+  const monsterReach = Math.min(monsterRect.width, monsterRect.height) * 0.2;
+
+  return distance <= playerReach + monsterReach + 90 * getAttackRangeMultiplier();
+}
+
+let playerDamageCooldownUntil = 0;
+
+function canMonsterDamagePlayer() {
+  return Date.now() >= playerDamageCooldownUntil;
+}
+
+function markMonsterDamageTaken() {
+  playerDamageCooldownUntil = Date.now() + getPlayerDamageCooldownMs();
+}
+
 function centerCamera() {
   if (!playerElem || map.style.display === "none") {
     return;
@@ -760,7 +815,7 @@ function firstCreatePlayer(x, y, skin, size) {
   div.append(img);
   const img2 = document.createElement("img");
   img2.classList.add("sword_img");
-  img2.src = `../images/sword${skin}.png`;
+  img2.src = `../images/sword${getEquippedWeaponId()}.png`;
   sword.append(img2);
   return div;
 }
@@ -785,7 +840,7 @@ function createPlayer(x, y, skin, size, side) {
   div.append(img);
   const img2 = document.createElement("img");
   img2.classList.add("sword_img");
-  img2.src = `../images/sword${skin}.png`;
+  img2.src = `../images/sword${getEquippedWeaponId()}.png`;
   sword.append(img2);
   return div;
 }
@@ -919,13 +974,13 @@ function stamina() {
   staminaPocent--;
   zapol2.style.width = `${staminaPocent}%`;
   if (staminaPocent <= 0) {
-    step = 10;
+    step = getPlayerMoveSpeed();
     mosey = false;
     cancelAnimationFrame(mouseID);
   }
 }
 
-let step = 10;
+let step = getPlayerMoveSpeed();
 let step2 = 10;
 
 let movingID = null,
@@ -1183,96 +1238,229 @@ if(localStorage.getItem("plusKills") === null){
 if(localStorage.getItem("plusMoney") === null){
   localStorage.setItem("plusMoney", 0);
 }                                                                                                                                                                                     
-let buttonStore = document.querySelectorAll(".button-store");
-let cenaStore = document.querySelectorAll(".cena");
-let arrStore = [];
-let skins = JSON.parse(localStorage.getItem("skins")) || [0];
+const DEFAULT_SKIN_ID = 0;
+const DEFAULT_WEAPON_ID = 0;
+const SHIELD_SKIN_ID = 2;
+const SHIELD_EXTRA_HEARTS = 2;
+const WEAPON_DAMAGE_BONUSES = {
+  0: 0,
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 0,
+  5: 4,
+  6: 5,
+};
+const WEAPON_SPEED_BONUSES = {
+  0: 0,
+  4: 1,
+};
+const SKIN_SPEED_BONUSES = {
+  3: 1,
+};
+const SKIN_DAMAGE_BONUSES = {
+  6: 3,
+};
+const SKIN_RANGE_BONUSES = {
+  4: 0.2,
+};
+const SKIN_DEFENSE_COOLDOWN_BONUSES = {
+  1: 250,
+  5: 500,
+};
 
-// 🔥 восстанавливаем купленные скины
-skins.forEach((id) => {
-  if(id === 0) return;
+function ensureOwnedList(key, fallback) {
+  const saved = JSON.parse(localStorage.getItem(key));
+  const list = Array.isArray(saved) ? saved.map(Number) : fallback.slice();
 
-  let btn = buttonStore[id - 1];
-
-  if(btn){
-    btn.textContent = "Продано";
-    btn.style.backgroundColor = "#6b8e6b";
-    btn.style.border = "2px solid #3e5c3e";
-    btn.style.pointerEvents = "none";
-  }
-});
-
-function buySkin(index) {
-  let cost = Number(cenaStore[index].textContent);
-  let stateMoney = Number(localStorage.getItem("money"));
-if (stateMoney >= cost && buttonStore[index].textContent != "Продано") {
-
-  let m = localStorage.getItem("money");
-  localStorage.setItem("money", m - cost);
-
-  skins = JSON.parse(localStorage.getItem("skins"));
-
-  // 🔥 ВОТ ЭТА ЧАСТЬ
-  buttonStore[index].textContent = "Продано";
-  buttonStore[index].style.backgroundColor = "#6b8e6b";
-  buttonStore[index].style.border = "2px solid #3e5c3e";
-  buttonStore[index].style.pointerEvents = "none";
-
-  index = index + 1;
-  skins.push(index);
-
-  localStorage.setItem("skins", JSON.stringify(skins));
-
-  money.textContent = localStorage.getItem("money");
-
-  } else if (stateMoney < cost) {
-    console.warn("Недостаточно денег");
-  }
+  return [...new Set(list)].sort((a, b) => a - b);
 }
-buttonStore.forEach((elem) => {
-  arrStore.push(elem);
-});
-arrStore.forEach((elem) => {
-  elem.addEventListener("click", () => {
-    let index = arrStore.indexOf(elem);
-    buySkin(index);
-  });
-});
 
-// if (JSON.parse(localStorage.getItem("skins")).includes(1)) {
-//   console.log("pyk");
-// }
-localStorage.setItem("skin", 0);
+let ownedSkins = ensureOwnedList(
+  "ownedSkins",
+  JSON.parse(localStorage.getItem("skins")) || [DEFAULT_SKIN_ID]
+);
+let ownedWeapons = ensureOwnedList("ownedWeapons", [DEFAULT_WEAPON_ID]);
+
+if (!ownedSkins.includes(DEFAULT_SKIN_ID)) {
+  ownedSkins.unshift(DEFAULT_SKIN_ID);
+}
+
+if (!ownedWeapons.includes(DEFAULT_WEAPON_ID)) {
+  ownedWeapons.unshift(DEFAULT_WEAPON_ID);
+}
+
+localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
+localStorage.setItem("skins", JSON.stringify(ownedSkins));
+localStorage.setItem("ownedWeapons", JSON.stringify(ownedWeapons));
+
+if (localStorage.getItem("skin") === null) {
+  localStorage.setItem("skin", String(DEFAULT_SKIN_ID));
+}
+
+if (localStorage.getItem("weapon") === null) {
+  localStorage.setItem("weapon", String(DEFAULT_WEAPON_ID));
+}
+
 money.textContent = localStorage.getItem("money");
 kill.textContent = localStorage.getItem("kill");
 death.textContent = localStorage.getItem("death");
+
+const skinCards = Array.from(document.querySelectorAll("#skinsStore .imgBlocks"));
+const weaponCards = Array.from(document.querySelectorAll("#weaponsStore .imgBlocks"));
 let leftArrow = document.querySelector(".arrow-left"),
   rightArrow = document.querySelector(".arrow-right"),
   imgChoose = document.querySelector(".player-choose");
 
+function getEquippedSkinId() {
+  return Number(localStorage.getItem("skin") || DEFAULT_SKIN_ID);
+}
+
+function getEquippedWeaponId() {
+  return Number(localStorage.getItem("weapon") || DEFAULT_WEAPON_ID);
+}
+
+function getAttackDamage() {
+  return (
+    1 +
+    (WEAPON_DAMAGE_BONUSES[getEquippedWeaponId()] || 0) +
+    (SKIN_DAMAGE_BONUSES[getEquippedSkinId()] || 0)
+  );
+}
+
+function getPlayerMoveSpeed() {
+  return (
+    10 +
+    (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0) +
+    (SKIN_SPEED_BONUSES[getEquippedSkinId()] || 0)
+  );
+}
+
+function getAttackRangeMultiplier() {
+  return rangeIncrease + (SKIN_RANGE_BONUSES[getEquippedSkinId()] || 0);
+}
+
+function getPlayerDamageCooldownMs() {
+  return 650 + (SKIN_DEFENSE_COOLDOWN_BONUSES[getEquippedSkinId()] || 0);
+}
+
+function syncSkinPreview() {
+  ownedSkins = ensureOwnedList("ownedSkins", [DEFAULT_SKIN_ID]);
+  const equippedSkinId = getEquippedSkinId();
+  const currentIndex = Math.max(0, ownedSkins.indexOf(equippedSkinId));
+
+  imgChoose.setAttribute("data-current", currentIndex);
+  imgChoose.innerHTML = `<img src="../images/character${ownedSkins[currentIndex]}.png" class="img-choose" /> `;
+}
+
+function updateCurrentPlayerAppearance() {
+  if (!playerElem) {
+    return;
+  }
+
+  const playerImage = playerElem.querySelector(".player_img");
+  const swordImage = playerElem.querySelector(".sword_img");
+
+  if (playerImage) {
+    playerImage.src = `../images/character${getEquippedSkinId()}.png`;
+  }
+
+  if (swordImage) {
+    swordImage.src = `../images/sword${getEquippedWeaponId()}.png`;
+  }
+}
+
+function setStoreButtonState(card, type, id) {
+  const button = card.querySelector(".button-store");
+  const owned = type === "skin" ? ownedSkins.includes(id) : ownedWeapons.includes(id);
+  const equipped =
+    type === "skin" ? getEquippedSkinId() === id : getEquippedWeaponId() === id;
+
+  button.style.pointerEvents = "auto";
+
+  if (!owned) {
+    button.textContent = "Купить";
+    button.style.backgroundColor = "#8db4d1";
+    button.style.border = "2px solid #4b6b80";
+    return;
+  }
+
+  if (equipped) {
+    button.textContent = "Надето";
+    button.style.backgroundColor = "#6b8e6b";
+    button.style.border = "2px solid #3e5c3e";
+    return;
+  }
+
+  button.textContent = "Надеть";
+  button.style.backgroundColor = "#d9c9a3";
+  button.style.border = "2px solid #6b4f2a";
+}
+
+function refreshStoreButtons() {
+  skinCards.forEach((card, index) => {
+    setStoreButtonState(card, "skin", index + 1);
+  });
+
+  weaponCards.forEach((card, index) => {
+    setStoreButtonState(card, "weapon", index + 1);
+  });
+}
+
+function equipItem(type, id) {
+  if (type === "skin") {
+    localStorage.setItem("skin", String(id));
+    syncSkinPreview();
+  } else {
+    localStorage.setItem("weapon", String(id));
+  }
+
+  updateCurrentPlayerAppearance();
+  refreshStoreButtons();
+  applyEquipmentBonuses(true);
+  localStorage.setItem("arenaSave", JSON.stringify({
+    coins:
+      typeof coins !== "undefined"
+        ? coins
+        : Number(localStorage.getItem("money")) || 0,
+    kills:
+      typeof kills !== "undefined"
+        ? kills
+        : Number(localStorage.getItem("kill")) || 0,
+    deaths:
+      typeof deaths !== "undefined"
+        ? deaths
+        : Number(localStorage.getItem("death")) || 0,
+    hp: playerHP
+  }));
+}
+
 leftArrow.addEventListener("click", () => {
-  skins = JSON.parse(localStorage.getItem("skins"));
+  ownedSkins = ensureOwnedList("ownedSkins", [DEFAULT_SKIN_ID]);
   let countForArrow = +imgChoose.getAttribute("data-current");
 
   countForArrow++;
-  if (countForArrow >= skins.length) {
+  if (countForArrow >= ownedSkins.length) {
     countForArrow = 0;
   }
-  imgChoose.setAttribute("data-current", countForArrow);
-  imgChoose.innerHTML = `<img src="../images/character${skins[countForArrow]}.png" class="img-choose" /> `;
-  localStorage.setItem("skin", skins[countForArrow]);
+
+  equipItem("skin", ownedSkins[countForArrow]);
 });
+
 rightArrow.addEventListener("click", () => {
-  skins = JSON.parse(localStorage.getItem("skins"));
+  ownedSkins = ensureOwnedList("ownedSkins", [DEFAULT_SKIN_ID]);
   let countForArrow = +imgChoose.getAttribute("data-current");
+
   countForArrow--;
   if (countForArrow < 0) {
-    countForArrow = skins.length - 1;
+    countForArrow = ownedSkins.length - 1;
   }
-  imgChoose.setAttribute("data-current", countForArrow);
-  imgChoose.innerHTML = `<img src="../images/character${skins[countForArrow]}.png" class="img-choose" /> `;
-  localStorage.setItem("skin", skins[countForArrow]);
+
+  equipItem("skin", ownedSkins[countForArrow]);
 });
+
+syncSkinPreview();
+refreshStoreButtons();
 ////////////////////////////////////// Левел ///////////////////////////////////
 let lvl = 1;
 let lvlprocent = 0;
@@ -1396,63 +1584,63 @@ function plusExp(event) {
 
 function setCharacteristics(lvl) {
   if (lvl === 2) {
-    step = 10;
+    step = 10 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 162 + "px";
     playerElem.style.height = 162 + "px";
     centerCamera();
     rangeIncrease = 1.1;
     socket.emit("setChar", 162, my_num);
   } else if (lvl === 3) {
-    step = 9;
+    step = 9 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 174 + "px";
     playerElem.style.height = 174 + "px";
     centerCamera();
     rangeIncrease = 1.2;
     socket.emit("setChar", 174, my_num);
   } else if (lvl === 4) {
-    step = 9;
+    step = 9 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 186 + "px";
     playerElem.style.height = 186 + "px";
     centerCamera();
     rangeIncrease = 1.3;
     socket.emit("setChar", 186, my_num);
   } else if (lvl === 5) {
-    step = 8;
+    step = 8 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 198 + "px";
     playerElem.style.height = 198 + "px";
     centerCamera();
     rangeIncrease = 1.4;
     socket.emit("setChar", 198, my_num);
   } else if (lvl === 6) {
-    step = 8;
+    step = 8 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 210 + "px";
     playerElem.style.height = 210 + "px";
     centerCamera();
     rangeIncrease = 1.5;
     socket.emit("setChar", 210, my_num);
   } else if (lvl === 7) {
-    step = 7;
+    step = 7 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 222 + "px";
     playerElem.style.height = 222 + "px";
     centerCamera();
     rangeIncrease = 1.6;
     socket.emit("setChar", 222, my_num);
   } else if (lvl === 8) {
-    step = 7;
+    step = 7 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 234 + "px";
     playerElem.style.height = 234 + "px";
     centerCamera();
     rangeIncrease = 1.7;
     socket.emit("setChar", 234, my_num);
   } else if (lvl === 9) {
-    step = 6;
+    step = 6 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 246 + "px";
     playerElem.style.height = 246 + "px";
     centerCamera();
     rangeIncrease = 1.8;
     socket.emit("setChar", 246, my_num);
   } else if (lvl === "MAX") {
-    step = 6;
+    step = 6 + (WEAPON_SPEED_BONUSES[getEquippedWeaponId()] || 0);
     playerElem.style.width = 258 + "px";
     playerElem.style.height = 258 + "px";
     centerCamera();
@@ -1547,26 +1735,10 @@ hearts.style.display = "flex";
 hearts.style.gap = "10px";
 hearts.style.zIndex = "999999";
 
-for(let i=0;i<3;i++){
-    const heart = document.createElement("img");
-    heart.src = "../images/stam111.png";
-    heart.style.width = "50px";
-    heart.style.height = "50px";
-    hearts.appendChild(heart);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-let playerHP = 6;
+const heartsBox = document.querySelector(".hearts");
+const BASE_PLAYER_HP = 6;
+let playerMaxHP = BASE_PLAYER_HP;
+let playerHP = BASE_PLAYER_HP;
 let coins = Number(localStorage.getItem("money")) || 0;
 
 // 🔥 ДОБАВЬ ЭТО
@@ -1586,15 +1758,103 @@ setTimeout(() => {
 // 👇 дальше твой код
 let startHP = playerHP;
 
+function renderHearts() {
+  if (!heartsBox) {
+    return;
+  }
+
+  heartsBox.innerHTML = "";
+
+  for (let i = 0; i < playerMaxHP; i++) {
+    const heart = document.createElement("img");
+    heart.src = "../images/stam111.png";
+    heart.className = "heart";
+
+    if (i >= playerHP) {
+      heart.style.opacity = "0.2";
+      heart.style.filter = "grayscale(1)";
+      heart.style.animation = "none";
+    }
+
+    heartsBox.appendChild(heart);
+  }
+}
+
+function damagePlayer(amount = 1) {
+  if (playerHP <= 0) {
+    return false;
+  }
+
+  playerHP = Math.max(0, playerHP - amount);
+  renderHearts();
+  return playerHP > 0;
+}
+
+function healPlayer(amount = 1) {
+  const nextHP = Math.min(playerMaxHP, playerHP + amount);
+
+  if (nextHP === playerHP) {
+    return false;
+  }
+
+  playerHP = nextHP;
+  renderHearts();
+  return true;
+}
+
+function applyEquipmentBonuses(healToMax = false) {
+  playerMaxHP =
+    BASE_PLAYER_HP +
+    (getEquippedSkinId() === SHIELD_SKIN_ID ? SHIELD_EXTRA_HEARTS : 0);
+
+  if (healToMax) {
+    playerHP = playerMaxHP;
+  } else {
+    playerHP = Math.min(playerHP, playerMaxHP);
+  }
+
+  renderHearts();
+  step = getPlayerMoveSpeed();
+  startHP = playerHP;
+}
+
+applyEquipmentBonuses(true);
+
 function monsterSpawnDelay(delay) {
   return Math.max(800, Math.floor(delay * 0.8));
 }
 
-function getRandomMonsterSpawn(monsterSize) {
-  return {
-    x: randomInteger(0, Math.max(0, MAP_WIDTH - monsterSize)),
-    y: randomInteger(0, Math.max(0, MAP_HEIGHT - monsterSize)),
+function getRandomMonsterSpawn(monsterSize, minDistanceFromPlayer = 520) {
+  const maxX = Math.max(0, MAP_WIDTH - monsterSize);
+  const maxY = Math.max(0, MAP_HEIGHT - monsterSize);
+  const playerCenterX = player_x + getPlayerSize() / 2;
+  const playerCenterY = player_y + getPlayerSize() / 2;
+  let attempts = 0;
+  let spawn = {
+    x: randomInteger(0, maxX),
+    y: randomInteger(0, maxY),
   };
+
+  while (playerElem && attempts < 30) {
+    const monsterCenterX = spawn.x + monsterSize / 2;
+    const monsterCenterY = spawn.y + monsterSize / 2;
+    const distance = Math.hypot(
+      monsterCenterX - playerCenterX,
+      monsterCenterY - playerCenterY
+    );
+
+    if (distance >= minDistanceFromPlayer) {
+      break;
+    }
+
+    spawn = {
+      x: randomInteger(0, maxX),
+      y: randomInteger(0, maxY),
+    };
+    attempts++;
+  }
+
+  return spawn;
 }
 
 // ---------------- MONSTER ----------------
@@ -1633,12 +1893,10 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
-
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -1668,10 +1926,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       // анимация атаки
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -1683,15 +1941,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -1748,7 +1998,7 @@ gameOver.appendChild(btn);
 
 btn.onclick = function(){
 	// 💰 сохранить coins
-  localStorage.setItem("coins", coins);
+  localStorage.setItem("money", coins);
   // 💀 сохраняем убийства
   localStorage.setItem("kill", kills);
 
@@ -1776,7 +2026,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -1787,9 +2037,9 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -1865,7 +2115,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -1883,26 +2133,7 @@ setInterval(() => {
     ){
 
       heart.remove();
-
-      if(playerHP < 6){
-        playerHP++;
-
-        let heartsBox = document.querySelector(".hearts");
-
-        // полностью перерисовать HP
-        heartsBox.innerHTML = "";
-
-        for(let i = 0; i < playerHP; i++){
-
-          let hp = document.createElement("img");
-          hp.src = "../images/stam111.png";
-          hp.className = "heart";
-
-          heartsBox.appendChild(hp);
-
-        }
-
-      }
+      healPlayer();
 
     }
 
@@ -1971,15 +2202,6 @@ setTimeout(() => {
 
   let monsterCanHit = true;
 
-  // берём HP игрока, если он уже есть в игре
-  let currentPlayerHP = (typeof playerHP !== "undefined") ? playerHP : 6;
-
-  function syncPlayerHP(){
-    if(typeof playerHP !== "undefined"){
-      playerHP = currentPlayerHP;
-    }
-  }
-
   // ==========================
   // 💥 ВЗРЫВ
   // ==========================
@@ -2037,7 +2259,7 @@ setTimeout(() => {
 
     let fireInterval = setInterval(() => {
 
-      let player = document.querySelector("#player_field img");
+      let player = getPlayerCollisionTarget();
       if(!player){
         clearInterval(fireInterval);
         fire.remove();
@@ -2065,19 +2287,9 @@ setTimeout(() => {
 
         clearInterval(fireInterval);
         fire.remove();
+        damagePlayer();
 
-        let hearts = document.querySelectorAll(".heart");
-
-        if(currentPlayerHP > 0){
-          currentPlayerHP--;
-          syncPlayerHP();
-
-          if(hearts[currentPlayerHP]){
-            hearts[currentPlayerHP].remove();
-          }
-        }
-
-        let playerEl = document.querySelector("#player_field img");
+        let playerEl = getPlayerCollisionTarget();
         if(playerEl){
           playerEl.style.filter = "brightness(0.3)";
           setTimeout(() => {
@@ -2085,7 +2297,7 @@ setTimeout(() => {
           }, 200);
         }
 
-        if(currentPlayerHP <= 0 && !window.gameOver){
+        if(playerHP <= 0 && !window.gameOver){
 
           deaths++;
           localStorage.setItem("death", deaths);
@@ -2159,7 +2371,7 @@ setTimeout(() => {
   // ==========================
   let pickHeartInterval = setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let heartsDrop = document.querySelectorAll(".dropHeart");
@@ -2176,17 +2388,7 @@ setTimeout(() => {
         p.bottom > h.top
       ){
         heart.remove();
-
-        if(currentPlayerHP < 6){
-          currentPlayerHP++;
-          syncPlayerHP();
-
-          let hp = document.createElement("img");
-          hp.src = "../images/stam111.png";
-          hp.className = "heart";
-
-          document.querySelector(".hearts").appendChild(hp);
-        }
+        healPlayer();
       }
 
     });
@@ -2209,7 +2411,7 @@ setTimeout(() => {
       return;
     }
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2244,10 +2446,10 @@ setTimeout(() => {
   shootFireball(monsterX + 100, monsterY + 100);
 }
 
-if(monster && monster.parentNode && distance < 120 && monsterCanHit){
+if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
   monsterCanHit = false;
-
+      markMonsterDamageTaken();
   // анимация атаки
   monster.style.transform = "scale(1.3)";
   setTimeout(()=>{
@@ -2259,18 +2461,7 @@ if(monster && monster.parentNode && distance < 120 && monsterCanHit){
   setTimeout(()=>{
     player.style.filter = "";
   },200);
-
-  let hearts = document.querySelectorAll(".heart");
-
-  // защита от багов
-  if(typeof playerHP !== "undefined" && playerHP > 0){
-
-    playerHP--;
-
-    if(hearts[playerHP]){
-      hearts[playerHP].remove();
-    }
-  }
+  damagePlayer();
 
   // смерть игрока
   if(typeof playerHP !== "undefined" && playerHP <= 0 && !window.gameOver){
@@ -2323,7 +2514,7 @@ if(monster && monster.parentNode && distance < 120 && monsterCanHit){
     gameOver.appendChild(btn);
 
     btn.onclick = function(){
-      localStorage.setItem("coins", coins);
+      localStorage.setItem("money", coins);
       localStorage.setItem("kill", kills);
       localStorage.setItem("death", deaths);
       location.reload();
@@ -2348,7 +2539,7 @@ if(monster && monster.parentNode && distance < 120 && monsterCanHit){
     if(e.button !== 0) return;
     if(!monster.parentNode) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2359,9 +2550,9 @@ if(monster && monster.parentNode && distance < 120 && monsterCanHit){
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -2385,7 +2576,7 @@ if(monster && monster.parentNode && distance < 120 && monsterCanHit){
         console.log("Монстр убит");
 
         // награда в коинах
-        let lostHP = startHP - currentPlayerHP;
+        let lostHP = startHP - playerHP;
         let reward = 0;
 
         if(lostHP === 0){
@@ -2498,12 +2689,10 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
-
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2533,10 +2722,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       // анимация атаки
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -2548,15 +2737,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -2633,7 +2814,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2644,9 +2825,9 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -2720,7 +2901,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -2738,16 +2919,7 @@ setInterval(() => {
     ){
 
       heart.remove();
-
-       if(playerHP < 6){
-        playerHP++;
-
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
-      }
+        healPlayer();
 
     }
 
@@ -2817,12 +2989,10 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
-
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2852,10 +3022,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       // анимация атаки
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -2867,15 +3037,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -2952,7 +3114,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2963,9 +3125,9 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -3038,7 +3200,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3056,17 +3218,7 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
-      }
+      healPlayer();
 
     }
 
@@ -3138,12 +3290,10 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
-
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3173,10 +3323,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       // анимация атаки
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -3188,15 +3338,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3273,7 +3415,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3284,9 +3426,9 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -3359,7 +3501,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3377,17 +3519,7 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
-      }
+      healPlayer();
 
     }
 
@@ -3458,12 +3590,10 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
-
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3493,10 +3623,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       // анимация атаки
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -3508,15 +3638,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3593,7 +3715,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3604,9 +3726,9 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -3679,7 +3801,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3697,17 +3819,7 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
-      }
+      healPlayer();
 
     }
 
@@ -3779,12 +3891,10 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
-
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3814,10 +3924,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       // анимация атаки
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -3829,15 +3939,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3914,7 +4016,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3925,9 +4027,9 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -4000,7 +4102,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -4018,17 +4120,7 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
-      }
+      healPlayer();
 
     }
 
@@ -4099,12 +4191,10 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 6;
-
   // движение и атака
   setInterval(() => {
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4134,10 +4224,10 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       // анимация атаки
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -4149,15 +4239,7 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -4234,7 +4316,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4245,9 +4327,9 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInAttackRange(playerRect, monsterRect)){
 
-      monsterHP--;
+      monsterHP -= getAttackDamage();
 
       monsterHPText.innerText = "HP: " + monsterHP;
 
@@ -4320,7 +4402,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = document.querySelector("#player_field img");
+  let player = getPlayerCollisionTarget();
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -4338,17 +4420,7 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-
-      if(playerHP < 6){
-        playerHP++;
-
-        // добавить сердце в панель HP
-        let hp = document.createElement("img");
-        hp.src = "../images/stam111.png";
-        hp.className = "heart";
-
-        document.querySelector(".hearts").appendChild(hp);
-      }
+      healPlayer();
 
     }
 
@@ -4665,7 +4737,12 @@ if(load){
 
   if(typeof coins !== "undefined") coins = data.coins || 0;
   if(typeof kills !== "undefined") kills = data.kills || 0;
-  if(typeof playerHP !== "undefined") playerHP = data.hp || 6;
+  if(typeof playerHP !== "undefined") {
+    const savedHp = typeof data.hp === "number" ? data.hp : playerMaxHP;
+    playerHP = Math.min(savedHp, playerMaxHP);
+    renderHearts();
+    startHP = playerHP;
+  }
 
 }
 
@@ -4813,13 +4890,11 @@ function createMonster() {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  let playerHP = 3;
-
   setInterval(() => {
 
     if(gamePaused) return;
 
-    let player = document.querySelector("#player_field img");
+    let player = getPlayerCollisionTarget();
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4847,10 +4922,10 @@ function createMonster() {
     monsterHPText.style.left = monsterX + "px";
     monsterHPText.style.top = (monsterY - 30) + "px";
 
-    if(distance < 120 && monsterCanHit){
+    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){ 
 
       monsterCanHit = false;
-
+      markMonsterDamageTaken();
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
         monster.style.transform = "scale(1)";
@@ -4860,15 +4935,7 @@ function createMonster() {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-
-      let hearts = document.querySelectorAll(".heart");
-
-      if(playerHP > 0){
-        playerHP--;
-        if(hearts[playerHP]){
-          hearts[playerHP].remove();
-        }
-      }
+        damagePlayer();
 
       if(playerHP <= 0){
         alert("Игрок проиграл");
@@ -5047,12 +5114,12 @@ function showSkinInfo(id){
 
 if(id === 1){
 skinName.innerText = "Страж";
-skinStats.innerText = "🛡 Защита +1\n💡 Древний защитник королевства";
+skinStats.innerText = "🛡 Защита +1\n💡 После удара даёт больше времени на отход";
 }
 
 if(id === 2){
-skinName.innerText = "Викинг";
-skinStats.innerText = "⚔ Урон +1\n💡 Воин с северных земель";
+skinName.innerText = "Щит";
+skinStats.innerText = "🛡 +2 сердца\n💡 Даёт дополнительное здоровье";
 }
 
 if(id === 3){
@@ -5062,12 +5129,12 @@ skinStats.innerText = "⚡ Скорость +1\n💡 Никто не видит 
 
 if(id === 4){
 skinName.innerText = "Шаман";
-skinStats.innerText = "✨ Магия +2\n💡 Управляет силами духов";
+skinStats.innerText = "✨ Магия +2\n💡 Увеличивает дальность удара";
 }
 
 if(id === 5){
 skinName.innerText = "Бездна";
-skinStats.innerText = "🛡 Защита +2\n💡 Существо из тёмного мира";
+skinStats.innerText = "🛡 Защита +2\n💡 Даёт самый длинный откат между ударами монстров";
 }
 
 if(id === 6){
@@ -5083,47 +5150,47 @@ skinInfo.style.display = "flex";
 
 
 
-// список купленных
-let ownedSkins = JSON.parse(localStorage.getItem("ownedSkins")) || [];
-let ownedWeapons = JSON.parse(localStorage.getItem("ownedWeapons")) || [];
-
-// функция покупки
 function buyItem(element, type, id){
 
-  let price = parseInt(element.querySelector(".cena").innerText);
+  const ownedList = type === "skin" ? ownedSkins : ownedWeapons;
+
+  if (ownedList.includes(id)) {
+    equipItem(type, id);
+    return;
+  }
+
+  let price = parseInt(element.querySelector(".cena").innerText, 10);
 
   if(coins < price){
     showNoMoney();
     return;
   }
 
-  // списываем деньги
   coins -= price;
-
-  // обновляем UI
+  localStorage.setItem("money", coins);
   document.getElementById("money").innerText = coins;
 
-  // сохраняем коины
+  ownedList.push(id);
+
+  if(type === "skin"){
+    ownedSkins = [...new Set(ownedList)].sort((a, b) => a - b);
+    localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
+    localStorage.setItem("skins", JSON.stringify(ownedSkins));
+  }
+
+  if(type === "weapon"){
+    ownedWeapons = [...new Set(ownedList)].sort((a, b) => a - b);
+    localStorage.setItem("ownedWeapons", JSON.stringify(ownedWeapons));
+  }
+
+  equipItem(type, id);
   localStorage.setItem("arenaSave", JSON.stringify({
     coins: coins,
     kills: kills,
     deaths: deaths,
     hp: playerHP
   }));
-
-  // сохраняем покупку
-  if(type === "skin"){
-    ownedSkins.push(id);
-    localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
-  }
-
-  if(type === "weapon"){
-    ownedWeapons.push(id);
-    localStorage.setItem("ownedWeapons", JSON.stringify(ownedWeapons));
-  }
-
-  // меняем кнопку
-  element.querySelector(".button-store").innerText = "Куплено";
+  showBuyMessage(type);
 }
 function showNoMoney(){
 
