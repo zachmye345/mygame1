@@ -549,6 +549,72 @@ function isMonsterTouchingPlayer(playerRect, monsterRect) {
   return distance <= playerRadius + monsterRadius;
 }
 
+function rectanglesIntersect(rectA, rectB) {
+  return (
+    rectA.left < rectB.right &&
+    rectA.right > rectB.left &&
+    rectA.top < rectB.bottom &&
+    rectA.bottom > rectB.top
+  );
+}
+
+function getWeaponHitboxRect() {
+  const player = getPlayerCollisionTarget();
+
+  if (!player) {
+    return null;
+  }
+
+  const playerRect = player.getBoundingClientRect();
+  const playerWidth = playerRect.width;
+  const playerHeight = playerRect.height;
+  const sideReach = Math.max(260, playerWidth * (1.4 + rangeIncrease * 0.42));
+  const forwardReach = Math.max(240, playerHeight * (1.55 + rangeIncrease * 0.5));
+  const overlap = Math.max(55, playerWidth * 0.42);
+
+  switch (side) {
+    case "down":
+      return {
+        left: playerRect.left - (sideReach - playerWidth) / 2,
+        top: playerRect.bottom - overlap,
+        right: playerRect.left - (sideReach - playerWidth) / 2 + sideReach,
+        bottom: playerRect.bottom + forwardReach,
+      };
+    case "left":
+      return {
+        left: playerRect.left - forwardReach,
+        top: playerRect.top - (sideReach - playerHeight) / 2,
+        right: playerRect.left + overlap,
+        bottom: playerRect.top - (sideReach - playerHeight) / 2 + sideReach,
+      };
+    case "right":
+      return {
+        left: playerRect.right - overlap,
+        top: playerRect.top - (sideReach - playerHeight) / 2,
+        right: playerRect.right + forwardReach,
+        bottom: playerRect.top - (sideReach - playerHeight) / 2 + sideReach,
+      };
+    case "up":
+    default:
+      return {
+        left: playerRect.left - (sideReach - playerWidth) / 2,
+        top: playerRect.top - forwardReach,
+        right: playerRect.left - (sideReach - playerWidth) / 2 + sideReach,
+        bottom: playerRect.top + overlap,
+      };
+  }
+}
+
+function isMonsterInWeaponHitbox(monsterRect) {
+  const weaponHitbox = getWeaponHitboxRect();
+
+  if (!weaponHitbox) {
+    return false;
+  }
+
+  return rectanglesIntersect(weaponHitbox, monsterRect);
+}
+
 let playerDamageCooldownUntil = 0;
 
 function canMonsterDamagePlayer() {
@@ -1823,7 +1889,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
@@ -2396,7 +2462,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
@@ -2682,7 +2748,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
@@ -3002,7 +3068,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
@@ -3324,7 +3390,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
@@ -3645,7 +3711,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
@@ -3967,7 +4033,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
@@ -4288,7 +4354,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(distance < 150){
+    if(isMonsterInWeaponHitbox(monsterRect)){
 
       monsterHP--;
 
