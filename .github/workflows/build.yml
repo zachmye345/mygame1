@@ -18,12 +18,12 @@ jobs:
         include:
           - name: Windows EXE
             os: windows-latest
-            command: npm run dist:win
+            command: npm run dist:win -- --publish never
             artifact_name: EggArena-windows
             artifact_path: dist/*.exe
           - name: macOS App
             os: macos-latest
-            command: npm run dist:mac
+            command: npm run dist:mac -- --publish never
             artifact_name: EggArena-macos
             artifact_path: |
               dist/*.dmg
