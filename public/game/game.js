@@ -7,8 +7,192 @@ const socket_config = {
   upgrade: false,
   autoConnect: false,
 };
-// Подключаемся к локальному серверу Electron по текущему адресу приложения.
-const socket = io(window.location.origin, socket_config);
+const PAGE_PARAMS = new URLSearchParams(window.location.search);
+const IS_STATIC_WEB =
+  PAGE_PARAMS.get("web") === "1" ||
+  !["127.0.0.1", "localhost"].includes(window.location.hostname);
+const WEB_HOME_URL = "../index.html";
+
+function createLocalSocket() {
+  const handlers = new Map();
+  const colors = [
+    "#ff0000",
+    "#ff5e00",
+    "#ffab00",
+    "#fff400",
+    "#8eff00",
+    "#0eff00",
+    "#00ffef",
+    "#009fff",
+    "#005bff",
+    "#0009ff",
+    "#6f00ff",
+    "#9a00ff",
+    "#f400ff",
+    "#ff00b9",
+  ];
+  const state = {
+    connected: false,
+    currentPlayer: 0,
+    players: [],
+    kakaxas: [],
+    kakaxaTimer: null,
+  };
+
+  function emitLocal(eventName, ...args) {
+    const eventHandlers = handlers.get(eventName) || [];
+
+    for (const handler of [...eventHandlers]) {
+      handler(...args);
+    }
+  }
+
+  function randomIntegerLocal(min, max) {
+    return Math.floor(min + Math.random() * (max + 1 - min));
+  }
+
+  function clonePlayers() {
+    return state.players.map((player) => ({ ...player }));
+  }
+
+  function createKakaxa() {
+    return {
+      x_kakaxi: randomIntegerLocal(0, 5660),
+      y_kakaxi: randomIntegerLocal(0, 3150),
+      size_kakaxi: randomIntegerLocal(25, 60),
+      color_kakaxi: colors[randomIntegerLocal(0, colors.length - 1)],
+    };
+  }
+
+  return {
+    on(eventName, handler) {
+      if (!handlers.has(eventName)) {
+        handlers.set(eventName, []);
+      }
+      handlers.get(eventName).push(handler);
+      return this;
+    },
+    emit(eventName, ...args) {
+      switch (eventName) {
+        case "spawn": {
+          const [x, y, name, skin, size] = args;
+
+          state.currentPlayer = 0;
+          state.players = [
+            {
+              name,
+              skin,
+              x,
+              y,
+              size,
+              score: 0,
+              side: 90,
+            },
+          ];
+
+          emitLocal("spawn_kakaxArr", state.kakaxas.slice());
+          emitLocal("number", state.currentPlayer);
+          emitLocal(
+            "spawn",
+            state.currentPlayer,
+            x,
+            y,
+            skin,
+            size,
+            clonePlayers()
+          );
+          emitLocal("score_update", clonePlayers());
+          break;
+        }
+        case "player_move": {
+          const [x, y, num] = args;
+
+          if (state.players[num]) {
+            state.players[num].x = x;
+            state.players[num].y = y;
+          }
+          break;
+        }
+        case "player_move_side": {
+          const [num, side] = args;
+          let deg = 0;
+
+          if (side === "left") {
+            deg = 270;
+          } else if (side === "right") {
+            deg = 90;
+          } else if (side === "down") {
+            deg = 180;
+          }
+
+          if (state.players[num]) {
+            state.players[num].side = deg;
+          }
+          emitLocal("player_move_side", num, deg);
+          break;
+        }
+        case "setChar": {
+          const [size, num] = args;
+
+          if (state.players[num]) {
+            state.players[num].size = size;
+          }
+          emitLocal("player_set_char", size, num);
+          break;
+        }
+        case "score_update": {
+          const [plus, num] = args;
+
+          if (state.players[num]) {
+            state.players[num].score += plus;
+          }
+          emitLocal("score_update", clonePlayers());
+          break;
+        }
+        case "number":
+          emitLocal("number", state.currentPlayer);
+          break;
+        case "proverka":
+          emitLocal("porverka_na_kakaxy");
+          break;
+        case "kakaxa_disconnect": {
+          const [index] = args;
+
+          if (index >= 0 && index < state.kakaxas.length) {
+            state.kakaxas.splice(index, 1);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+
+      return this;
+    },
+    connect() {
+      if (state.connected) {
+        return;
+      }
+
+      state.connected = true;
+      emitLocal("connect");
+
+      if (!state.kakaxaTimer) {
+        state.kakaxaTimer = window.setInterval(() => {
+          const kakaxa = createKakaxa();
+
+          state.kakaxas.push(kakaxa);
+          emitLocal("spawn_kakaxi", kakaxa);
+        }, 500);
+      }
+    },
+  };
+}
+
+// В desktop используем реальный socket.io, а в web-режиме включаем локальную single-player логику.
+const socket = IS_STATIC_WEB
+  ? createLocalSocket()
+  : io(window.location.origin, socket_config);
 
 // происходит автоматически по подключению к серверу
 socket.on("connect", () => {
@@ -399,6 +583,11 @@ function unbindGameControls() {
 }
 
 function closeDesktopApp() {
+  if (IS_STATIC_WEB) {
+    window.location.href = WEB_HOME_URL;
+    return;
+  }
+
   fetch("/__quit_app__", { method: "POST" }).catch(() => {
     // Fallback for non-Electron launch.
   });

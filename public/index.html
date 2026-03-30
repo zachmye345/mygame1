@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EggArena Web</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: #f8ecd0;
+        background: #020814;
+        overflow: hidden;
+      }
+
+      .bg-video {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.28;
+        filter: blur(4px) brightness(0.75);
+        pointer-events: none;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(94, 158, 255, 0.28), transparent 30%),
+          radial-gradient(circle at 80% 25%, rgba(166, 109, 255, 0.22), transparent 28%),
+          radial-gradient(circle at 50% 80%, rgba(54, 178, 255, 0.18), transparent 32%),
+          rgba(2, 8, 20, 0.72);
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .card {
+        width: min(980px, 100%);
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 24px;
+        padding: 28px;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 240, 210, 0.16);
+        background: rgba(10, 18, 35, 0.78);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 18px;
+      }
+
+      .brand img {
+        width: min(340px, 100%);
+        height: auto;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(143, 183, 255, 0.14);
+        color: #b9d6ff;
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(38px, 5vw, 72px);
+        line-height: 0.95;
+      }
+
+      p {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.55;
+        color: rgba(248, 236, 208, 0.88);
+      }
+
+      .panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 18px;
+        padding: 22px;
+        border-radius: 22px;
+        background: rgba(248, 236, 208, 0.08);
+        border: 1px solid rgba(248, 236, 208, 0.14);
+      }
+
+      .play-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 64px;
+        padding: 16px 24px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #67b8ff, #2b8cff);
+        color: #04111f;
+        text-decoration: none;
+        font-size: 22px;
+        font-weight: 800;
+        box-shadow: 0 18px 40px rgba(43, 140, 255, 0.28);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .play-link:hover {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 22px 46px rgba(43, 140, 255, 0.34);
+      }
+
+      .note {
+        font-size: 15px;
+        color: rgba(248, 236, 208, 0.72);
+      }
+
+      .stat {
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(6, 12, 24, 0.55);
+        border: 1px solid rgba(248, 236, 208, 0.08);
+      }
+
+      .stat strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #ffffff;
+      }
+
+      @media (max-width: 840px) {
+        .card {
+          grid-template-columns: 1fr;
+          padding: 22px;
+        }
+
+        h1 {
+          font-size: clamp(34px, 11vw, 54px);
+        }
+
+        p {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <video class="bg-video" autoplay muted playsinline loop poster="./images/fonVideo.jpg">
+      <source src="./video/fonVideo.mp4" type="video/mp4" />
+    </video>
+    <div class="overlay"></div>
+
+    <main>
+      <section class="card">
+        <div class="brand">
+          <span class="eyebrow">EggArena Web</span>
+          <img src="./images/logo.png" alt="EggArena" />
+          <h1>Браузерная версия игры</h1>
+          <p>
+            Запускайте EggArena прямо из GitHub Pages как обычный игровой сайт.
+            Прогресс сохраняется в браузере, а матч открывается по кнопке ниже.
+          </p>
+        </div>
+
+        <div class="panel">
+          <a class="play-link" href="./game/game.html?web=1">Играть в браузере</a>
+          <p class="note">
+            Веб-режим запускается как локальная браузерная версия без установки
+            приложения.
+          </p>
+
+          <div class="stat">
+            <strong>Сохранения</strong>
+            Монеты, убийства и выбранные предметы хранятся в вашем браузере.
+          </div>
+          <div class="stat">
+            <strong>Управление</strong>
+            После загрузки матча игрок появляется на карте, проходит отсчёт, и
+            только затем включается движение.
+          </div>
+          <div class="stat">
+            <strong>Запуск с GitHub</strong>
+            После деплоя откроется обычная ссылка на сайт, как у стандартной
+            браузерной игры.
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
