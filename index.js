@@ -88,7 +88,7 @@ async function onAppReady() {
   game.setFullScreen(true);
 
   await loadScreen.loadFile(path.join(__dirname, "public", "load", "load.html"));
-  await game.loadURL(`http://127.0.0.1:${PORT}`);
+  await game.loadURL(`http://127.0.0.1:${PORT}/game/game.html`);
 }
 // конец создания окна приложения ( для игры )
 
@@ -124,8 +124,14 @@ function createServer() {
     }
 
     const pathname = decodeURIComponent(requestUrl.split("?")[0]);
-    const relativePath =
-      pathname === "/" ? path.join("game", "game.html") : pathname.replace(/^\/+/, "");
+    if (pathname === "/") {
+      res.statusCode = 302;
+      res.setHeader("Location", "/game/game.html");
+      res.end();
+      return;
+    }
+
+    const relativePath = pathname.replace(/^\/+/, "");
     const filePath = path.normalize(path.join(PUBLIC_DIR, relativePath));
     const isInsidePublicDir =
       filePath === PUBLIC_DIR || filePath.startsWith(`${PUBLIC_DIR}${path.sep}`);
