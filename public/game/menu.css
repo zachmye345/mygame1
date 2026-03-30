@@ -589,7 +589,7 @@ html {
 }
 
 .hearts{
-  position: fixed;
+  position: absolute;
   right: 40px;
   bottom: 40px;
   display: flex;
@@ -634,7 +634,7 @@ pointer-events:none;
 
 
 .flashEffect{
-position:fixed;
+position:absolute;
 top:0;
 left:0;
 width:100%;

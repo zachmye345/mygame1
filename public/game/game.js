@@ -149,6 +149,9 @@ function createLocalSocket() {
           emitLocal("score_update", clonePlayers());
           break;
         }
+        case "player_hit":
+          emitLocal("animation_sword", state.currentPlayer);
+          break;
         case "number":
           emitLocal("number", state.currentPlayer);
           break;
@@ -201,22 +204,20 @@ socket.on("connect", () => {
     kakaxArray.splice(num, 1);
   });
   socket.on("animation_sword", (num) => {
-    player_field.children[
-      num
-    ].children[0].style.animation = `hit .5s linear forwards`;
-    setTimeout(() => {
-      player_field.children[num].children[0].style.animation = ``;
-    }, 501);
+    if (num === my_num) {
+      return;
+    }
+    playSwordAnimation(player_field.children[num]);
   });
   socket.on("porverka_na_kakaxy", () => {
     for (let i = 0; i < kakaxArray.length; i++) {
       let item = kakaxArray[i];
-      let player = playerElem.getBoundingClientRect();
       let x = player_x;
       let y = player_y;
+      const playerSize = getPlayerSize();
 
-      let player_x2 = x + player.width;
-      let player_y2 = y + player.width;
+      let player_x2 = x + playerSize;
+      let player_y2 = y + playerSize;
 
       let item_x = item.x_kakaxi;
       let item_y = item.y_kakaxi;
@@ -401,13 +402,15 @@ const level = document.getElementById("level");
 const zapol1 = document.getElementById("zapol1");
 const zapol2 = document.getElementById("zapol2");
 const video_bg = document.getElementById("video_bg");
+const arenaViewport = document.getElementById("arenaViewport");
 const MAP_WIDTH = 5760;
 const MAP_HEIGHT = 3250;
 const MENU_BASE_WIDTH = 1700;
 const MENU_BASE_HEIGHT = 950;
 const BEFORE_MENU_BASE_WIDTH = 876;
 const BEFORE_MENU_BASE_HEIGHT = 620;
-const ARENA_VIEWPORT_SIZE = 10000;
+const ARENA_BASE_WIDTH = 1700;
+const ARENA_BASE_HEIGHT = 950;
 let plusMoney = document.getElementById("plusMoney");
 let plusKills = document.getElementById("plusKills");
 let start3 = 0;
@@ -462,6 +465,7 @@ function showGameplayScene() {
   video_bg.style.display = "none";
   menu.style.display = "none";
   beforeMenu.style.display = "none";
+  arenaViewport.style.display = "block";
   ui.style.display = "block";
   map.style.display = "block";
   map.style.filter = "blur(0px)";
@@ -474,12 +478,12 @@ function showGameplayScene() {
 }
 
 function setArenaViewportActive(active) {
-  const viewportSize = active ? `${ARENA_VIEWPORT_SIZE}px` : "100%";
-
-  html.style.width = viewportSize;
-  html.style.height = viewportSize;
-  body.style.width = viewportSize;
-  body.style.height = viewportSize;
+  html.style.width = "100%";
+  html.style.height = "100%";
+  body.style.width = "100%";
+  body.style.height = "100%";
+  body.style.overflow = "hidden";
+  arenaViewport.style.display = active ? "block" : "none";
 }
 
 function fitPanelToViewport(panel, baseWidth, baseHeight) {
@@ -497,6 +501,20 @@ function fitPanelToViewport(panel, baseWidth, baseHeight) {
   panel.style.transformOrigin = "center center";
 }
 
+function fitArenaViewport() {
+  if (!arenaViewport) {
+    return;
+  }
+
+  const scale = Math.min(
+    window.innerWidth / ARENA_BASE_WIDTH,
+    window.innerHeight / ARENA_BASE_HEIGHT,
+    1
+  );
+
+  arenaViewport.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
 function getPlayerSize() {
   if (!playerElem) {
     return 150;
@@ -510,27 +528,21 @@ function centerCamera() {
     return;
   }
 
-  const fieldRect = player_field.getBoundingClientRect();
-  const fieldLeft = fieldRect.left + window.scrollX;
-  const fieldTop = fieldRect.top + window.scrollY;
   const playerSize = getPlayerSize();
-  const targetLeft =
-    fieldLeft + player_x + playerSize / 2 - window.innerWidth / 2;
-  const targetTop =
-    fieldTop + player_y + playerSize / 2 - window.innerHeight / 2;
-  const maxLeft = Math.max(
+  const playerCenterX = player_x + playerSize / 2;
+  const playerCenterY = player_y + playerSize / 2;
+  const minCameraX = ARENA_BASE_WIDTH - MAP_WIDTH;
+  const minCameraY = ARENA_BASE_HEIGHT - MAP_HEIGHT;
+  const cameraX = Math.min(
     0,
-    document.documentElement.scrollWidth - window.innerWidth
+    Math.max(ARENA_BASE_WIDTH / 2 - playerCenterX, minCameraX)
   );
-  const maxTop = Math.max(
+  const cameraY = Math.min(
     0,
-    document.documentElement.scrollHeight - window.innerHeight
+    Math.max(ARENA_BASE_HEIGHT / 2 - playerCenterY, minCameraY)
   );
 
-  window.scrollTo(
-    Math.min(Math.max(targetLeft, 0), maxLeft),
-    Math.min(Math.max(targetTop, 0), maxTop)
-  );
+  map.style.transform = `translate3d(${cameraX}px, ${cameraY}px, 0)`;
 }
 
 function syncViewportLayout() {
@@ -540,10 +552,35 @@ function syncViewportLayout() {
     BEFORE_MENU_BASE_WIDTH,
     BEFORE_MENU_BASE_HEIGHT
   );
+  fitArenaViewport();
 
   if (playerElem && map.style.display !== "none") {
     centerCamera();
   }
+}
+
+function playSwordAnimation(playerNode) {
+  if (!playerNode) {
+    return;
+  }
+
+  const sword = playerNode.querySelector(".sword");
+
+  if (!sword) {
+    return;
+  }
+
+  if (sword._attackResetTimer) {
+    clearTimeout(sword._attackResetTimer);
+  }
+
+  sword.classList.remove("is-attacking");
+  void sword.offsetWidth;
+  sword.classList.add("is-attacking");
+  sword._attackResetTimer = setTimeout(() => {
+    sword.classList.remove("is-attacking");
+    sword._attackResetTimer = null;
+  }, 360);
 }
 
 function stopMovement() {
@@ -814,7 +851,8 @@ function mouseDown(e) {
 function hit() {
   stopMovement();
   unbindGameControls();
-  let playerElemBound = playerElem.getBoundingClientRect();
+  const playerSize = getPlayerSize();
+  playSwordAnimation(playerElem);
   // animationSword.style.animation = `hit 1.0s linear forwards`;
   // ! let div = null;
   switch (side) {
@@ -822,8 +860,8 @@ function hit() {
       hitBlockf = {
         x: `${player_x - 50 * rangeIncrease}`,
         y: `${player_y - 160 * rangeIncrease}`,
-        x2: `${player_x + playerElemBound.width + 100 * rangeIncrease}`,
-        y2: `${player_y + playerElemBound.width + 150 * rangeIncrease}`,
+        x2: `${player_x + playerSize + 100 * rangeIncrease}`,
+        y2: `${player_y + playerSize + 150 * rangeIncrease}`,
       };
       // ? div = document.createElement("div");
       // ? div.style.position = "absolute";
@@ -841,8 +879,8 @@ function hit() {
       hitBlockf = {
         x: `${player_x - 50 * rangeIncrease}`,
         y: `${player_y + 10 * rangeIncrease}`,
-        x2: `${player_x + playerElemBound.width + 100 * rangeIncrease}`,
-        y2: `${player_y + playerElemBound.width + 150 * rangeIncrease}`,
+        x2: `${player_x + playerSize + 100 * rangeIncrease}`,
+        y2: `${player_y + playerSize + 150 * rangeIncrease}`,
       };
       socket.emit("player_hit", hitBlockf, my_num, side);
       break;
@@ -850,8 +888,8 @@ function hit() {
       hitBlockf = {
         x: `${player_x - 160 * rangeIncrease}`,
         y: `${player_y - 50 * rangeIncrease}`,
-        x2: `${player_x + playerElemBound.width + 150 * rangeIncrease}`,
-        y2: `${player_y + playerElemBound.width + 100 * rangeIncrease}`,
+        x2: `${player_x + playerSize + 150 * rangeIncrease}`,
+        y2: `${player_y + playerSize + 100 * rangeIncrease}`,
       };
       socket.emit("player_hit", hitBlockf, my_num, side);
       break;
@@ -859,8 +897,8 @@ function hit() {
       hitBlockf = {
         x: `${player_x + 10 * rangeIncrease}`,
         y: `${player_y - 50 * rangeIncrease}`,
-        x2: `${player_x + playerElemBound.width + 100 * rangeIncrease}`,
-        y2: `${player_y + playerElemBound.width + 150 * rangeIncrease}`,
+        x2: `${player_x + playerSize + 100 * rangeIncrease}`,
+        y2: `${player_y + playerSize + 150 * rangeIncrease}`,
       };
       socket.emit("player_hit", hitBlockf, my_num, side);
       break;
@@ -960,8 +998,7 @@ function onKeyup(e) {
 }
 let side = "up";
 function moveRight() {
-  let playerElemBound = playerElem.getBoundingClientRect();
-  let player_x2 = player_x + playerElemBound.width;
+  let player_x2 = player_x + getPlayerSize();
   if (player_x2 >= MAP_WIDTH) {
     return null;
   } else {
@@ -990,8 +1027,7 @@ function moveLeft() {
   }
 }
 function moveBottom() {
-  let playerElemBound = playerElem.getBoundingClientRect();
-  let player_y2 = player_y + playerElemBound.height;
+  let player_y2 = player_y + getPlayerSize();
   if (player_y2 >= MAP_HEIGHT) {
     return null;
   } else {

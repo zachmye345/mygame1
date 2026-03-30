@@ -1,14 +1,34 @@
+#arenaViewport {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 1700px;
+  height: 950px;
+  overflow: hidden;
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center center;
+  z-index: 1;
+}
+
 .map {
   display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 5760px;
   height: 3250px;
+  transform: translate3d(0, 0, 0);
+  transform-origin: top left;
+  will-change: transform;
 }
 
 .gif {
   display: none;
   position: absolute;
-  width: 10000px;
-  height: 10000px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background-image: url("../images/fonVideo.jpg");
   background-position: center;
   background-repeat: no-repeat;
@@ -41,6 +61,11 @@
   height: 100%;
   transform-origin: 50% 100% 0px;
   transform: rotate(-40deg) scale(1.2);
+  will-change: transform;
+}
+
+.sword.is-attacking {
+  animation: hit 0.35s cubic-bezier(0.25, 0.9, 0.3, 1) forwards;
 }
 #player_field {
   width: 5760px;
@@ -92,8 +117,8 @@
   0% {
     transform: rotateZ(-40deg) scale(1.2);
   }
-  50% {
-    transform: rotateZ(-130deg) scale(1.2);
+  45% {
+    transform: rotateZ(-138deg) scale(1.28);
   }
   100% {
     transform: rotateZ(-40deg) scale(1.2);
@@ -102,7 +127,7 @@
 /*//////////        UI        ////////*/
 .ui {
   display: none;
-  position: fixed;
+  position: absolute;
   width: 100%;
   height: 100%;
   background: radial-gradient(
@@ -134,7 +159,7 @@
 }
 
 .sap {
-  position: fixed;
+  position: absolute;
   width: 320px;
   height: 50px;
   color: wheat;
@@ -162,7 +187,7 @@
   align-items: center;
   width: 90%;
   height: 32%;
-  position: fixed;
+  position: absolute;
   bottom: 5%;
   left: 50%;
   transform: translate(-50%);
@@ -230,7 +255,7 @@
   position: absolute;
 }
 .money_score {
-  position: fixed;
+  position: absolute;
   top: 0%;
   left: 0%;
   padding: 15px;

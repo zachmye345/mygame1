@@ -14,52 +14,49 @@
     <link rel="stylesheet" href="game.css" />
   </head>  
   <body>
-    <div class="gif"></div>
-    <div class="map">
-      <div id="player_field"></div>
-      <div id="hitBlocks"></div>
-      <canvas id="myCanvas" class="background_map"></canvas>
-      <div class="kakaxi"></div>
-
-	  </div>
-	 
-
-    <div class="ui">
-      <p class="sap">Таблица лидеров</p>
-      <div class="score_list">
+    <div id="arenaViewport">
+      <div class="gif"></div>
+      <div class="map">
+        <div id="player_field"></div>
+        <div id="hitBlocks"></div>
+        <canvas id="myCanvas" class="background_map"></canvas>
+        <div class="kakaxi"></div>
       </div>
-	  <div class="hearts">
-    <img src="../images/stam111.png" class="heart" />
-    <img src="../images/stam111.png" class="heart" />
-    <img src="../images/stam111.png" class="heart" />
-	 <img src="../images/stam111.png" class="heart" />
-    <img src="../images/stam111.png" class="heart" />
-    <img src="../images/stam111.png" class="heart" />
-  </div>
- 
- 
 
-      <div class="bars">
-        <div class="level_bar">
-          <div id="level_bar">
-            <div id="zapol1"></div>
+      <div class="ui">
+        <p class="sap">Таблица лидеров</p>
+        <div class="score_list">
+        </div>
+	    <div class="hearts">
+      <img src="../images/stam111.png" class="heart" />
+      <img src="../images/stam111.png" class="heart" />
+      <img src="../images/stam111.png" class="heart" />
+	     <img src="../images/stam111.png" class="heart" />
+      <img src="../images/stam111.png" class="heart" />
+      <img src="../images/stam111.png" class="heart" />
+    </div>
+
+        <div class="bars">
+          <div class="level_bar">
+            <div id="level_bar">
+              <div id="zapol1"></div>
+            </div>
+            <div id="expImg">
+              <div id="level"></div>
+              <img src="../images/Exp.png" alt="exp.png" srcset="" />
+            </div>
           </div>
-          <div id="expImg">
-            <div id="level"></div>
-            <img src="../images/Exp.png" alt="exp.png" srcset="" />
+          <div class="stamina_bar">
+            <div id="stamina_bar">
+              <div id="zapol2"></div>
+            </div>
+            <img src="../images/stam.png" alt="stam.png" srcset="" />
           </div>
         </div>
-        <div class="stamina_bar">
-          <div id="stamina_bar">
-            <div id="zapol2"></div>
-          </div>
-          <img src="../images/stam.png" alt="stam.png" srcset="" />
+        <div class="money_score">
+          Количество ваших коинов: <span id="money_ui">0</span>
         </div>
       </div>
-      <div class="money_score">
-        Количество ваших коинов: <span id="money_ui">0</span>
-      </div>
-
     </div>
 
  
