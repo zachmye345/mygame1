@@ -25,10 +25,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/checkout@v5
 
       - name: Disable Jekyll processing
         run: touch public/.nojekyll
