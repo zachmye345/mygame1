@@ -1,109 +1,39 @@
 // начало создания окна приложения ( для игры )
-const path = require("path");
-const { app, BrowserWindow } = require("electron");
-
-const PORT = 700;
-const PUBLIC_DIR = path.join(__dirname, "public");
-const MIME_TYPES = {
-  ".css": "text/css; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".jpg": "image/jpeg",
-  ".js": "text/javascript; charset=utf-8",
-  ".mp4": "video/mp4",
-  ".png": "image/png",
-  ".txt": "text/plain; charset=utf-8",
-};
-let localServer;
-
+const { app, BrowserWindow, ipcMain } = require("electron");
 app.commandLine.appendSwitch("force-device-scale-factor", "1");
-app
-  .whenReady()
-  .then(onAppReady)
-  .catch((error) => {
-    console.error("Не удалось запустить приложение:", error);
-    app.quit();
-  });
+app.on("ready", onAppReady);
 
-app.on("before-quit", () => {
-  if (localServer) {
-    localServer.close();
-  }
-});
-
-app.on("window-all-closed", () => {
-  app.quit();
-});
-
-async function onAppReady() {
-  localServer = await createServer();
+function onAppReady() {
+  createServer();
 
   const game = new BrowserWindow({
-    width: 1440,
-    height: 900,
-    minWidth: 900,
-    minHeight: 600,
     autoHideMenuBar: true,
-    resizable: true,
-    maximizable: true,
-    fullscreenable: true,
+    resizable: false,
     show: false,
-    backgroundColor: "#020814",
     webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      spellcheck: false,
+      nodeIntegration: true,
     },
   });
-
+  game.webContents.setZoomFactor(1);
+  game.setFullScreen(true);
+  game.loadFile("public/game/game.html");
   const loadScreen = new BrowserWindow({
     width: 500,
     height: 500,
     frame: false,
     autoHideMenuBar: true,
     resizable: false,
-    show: false,
-    backgroundColor: "#000000",
+    webPreferences: {
+      nodeIntegration: true,
+    },
   });
-
+  loadScreen.loadFile("public/game/game.html");
   loadScreen.once("ready-to-show", () => {
-    loadScreen.show();
-  });
-
-  game.once("ready-to-show", () => {
-    game.maximize();
-    game.show();
-    if (!loadScreen.isDestroyed()) {
+    setTimeout(() => {
+      game.show();
       loadScreen.close();
-    }
+    }, 0);
   });
-
-  game.on("closed", () => {
-    if (!loadScreen.isDestroyed()) {
-      loadScreen.close();
-    }
-  });
-  game.webContents.on("before-input-event", (event, input) => {
-    if (
-      input.type === "keyDown" &&
-      (input.key === "F11" || (input.key === "Enter" && input.alt))
-    ) {
-      event.preventDefault();
-      game.setFullScreen(!game.isFullScreen());
-    }
-  });
-  game.webContents.on(
-    "did-fail-load",
-    (_event, errorCode, errorDescription, validatedURL) => {
-      console.error(
-        `Не удалось загрузить окно игры: ${errorCode} ${errorDescription} (${validatedURL})`
-      );
-    }
-  );
-
-  game.webContents.setZoomFactor(1);
-
-  await loadScreen.loadFile(path.join(__dirname, "public", "load", "load.html"));
-  await game.loadURL(`http://127.0.0.1:${PORT}/game/game.html`);
 }
 // конец создания окна приложения ( для игры )
 
@@ -113,7 +43,7 @@ function createServer() {
   const fs = require("fs");
   const http = require("http");
   const server = http.createServer(onConnectionHttp);
-  const port = PORT;
+  const port = 700;
 
   // 2 шаг - поднять io сервер для обмена данными между игроками
   // socket.io - модуль для быстрого обмена сообщениями через сервер
@@ -132,57 +62,241 @@ function createServer() {
 
   // обработка http запросов ( http сервер выдает файлы )
   function onConnectionHttp(req, res) {
-    const requestUrl = req.url || "/";
-
-    if (requestUrl.startsWith("/socket.io/")) {
-      return;
+    if (req.url === "/") {
+      res.setHeader("Content-Type", "text/html");
+      fs.readFile("public/game/game.html", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/menu.js") {
+      res.setHeader("Content-Type", "text/js");
+      fs.readFile("public/game/menu.js", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/game.js") {
+      res.setHeader("Content-Type", "text/js");
+      fs.readFile("public/game/game.js", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/menu.css") {
+      res.setHeader("Content-Type", "text/css");
+      fs.readFile("public/game/menu.css", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/game.css") {
+      res.setHeader("Content-Type", "text/css");
+      fs.readFile("public/game/game.css", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/sword6.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/sword6.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/sword5.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/sword5.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/sword4.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/sword4.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/sword3.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/sword3.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/sword1.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/sword1.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/sword2.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/sword2.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/sword0.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/sword0.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/character1.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/character1.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/character2.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/character2.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/coin.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/coin.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/logo.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/logo.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/character3.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/character3.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/character4.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/character4.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/character0.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/character0.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/character5.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/character5.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/character6.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/character6.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/stam.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/stam.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/Exp.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/Exp.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/video/fonVideo.mp4") {
+      res.setHeader("Content-Type", "video/mp4");
+      fs.readFile("public/video/fonVideo.mp4", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/fonVideo.jpg") {
+      res.setHeader("Content-Type", "image/jpg");
+      fs.readFile("public/images/fonVideo.jpg", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
+    } else if (req.url === "/images/backGround.png") {
+      res.setHeader("Content-Type", "image/png");
+      fs.readFile("public/images/backGround.png", (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.end(data);
+        }
+      });
     }
-
-    const pathname = decodeURIComponent(requestUrl.split("?")[0]);
-    if (pathname === "/__quit_app__") {
-      res.statusCode = 204;
-      res.end();
-      setImmediate(() => app.quit());
-      return;
-    }
-
-    if (pathname === "/") {
-      res.statusCode = 302;
-      res.setHeader("Location", "/game/game.html");
-      res.end();
-      return;
-    }
-
-    const relativePath = pathname.replace(/^\/+/, "");
-    const filePath = path.normalize(path.join(PUBLIC_DIR, relativePath));
-    const isInsidePublicDir =
-      filePath === PUBLIC_DIR || filePath.startsWith(`${PUBLIC_DIR}${path.sep}`);
-
-    if (!isInsidePublicDir) {
-      res.statusCode = 403;
-      res.end("Forbidden");
-      return;
-    }
-
-    const contentType =
-      MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
-
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        console.error(`Не удалось отдать ${pathname}:`, err.message);
-        res.statusCode = err.code === "ENOENT" ? 404 : 500;
-        res.end(err.code === "ENOENT" ? "Not found" : "Server error");
-        return;
-      }
-
-      res.setHeader("Content-Type", contentType);
-      if (req.method === "HEAD") {
-        res.end();
-        return;
-      }
-
-      res.end(data);
-    });
   }
 
   // Обработка socket.io запросов ( обмен данными между игроками )
@@ -338,17 +452,12 @@ function createServer() {
     }
     ioServer.emit("spawn_kakaxi", kakaxa);
   }, 500);
+  server.listen(port, () => {
+    console.log("server online");
+  });
   setInterval(() => {
     ioServer.emit("score_update", players);
   }, 0);
-
-  return new Promise((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(port, () => {
-      console.log(`server online on port ${port}`);
-      resolve(server);
-    });
-  });
 }
 
 let kakaxArray = [];

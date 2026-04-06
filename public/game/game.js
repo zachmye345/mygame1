@@ -7,195 +7,11 @@ const socket_config = {
   upgrade: false,
   autoConnect: false,
 };
-const PAGE_PARAMS = new URLSearchParams(window.location.search);
-const IS_STATIC_WEB =
-  PAGE_PARAMS.get("web") === "1" ||
-  !["127.0.0.1", "localhost"].includes(window.location.hostname);
-const WEB_HOME_URL = "../index.html";
-
-function createLocalSocket() {
-  const handlers = new Map();
-  const colors = [
-    "#ff0000",
-    "#ff5e00",
-    "#ffab00",
-    "#fff400",
-    "#8eff00",
-    "#0eff00",
-    "#00ffef",
-    "#009fff",
-    "#005bff",
-    "#0009ff",
-    "#6f00ff",
-    "#9a00ff",
-    "#f400ff",
-    "#ff00b9",
-  ];
-  const state = {
-    connected: false,
-    currentPlayer: 0,
-    players: [],
-    kakaxas: [],
-    kakaxaTimer: null,
-  };
-
-  function emitLocal(eventName, ...args) {
-    const eventHandlers = handlers.get(eventName) || [];
-
-    for (const handler of [...eventHandlers]) {
-      handler(...args);
-    }
-  }
-
-  function randomIntegerLocal(min, max) {
-    return Math.floor(min + Math.random() * (max + 1 - min));
-  }
-
-  function clonePlayers() {
-    return state.players.map((player) => ({ ...player }));
-  }
-
-  function createKakaxa() {
-    return {
-      x_kakaxi: randomIntegerLocal(0, 5660),
-      y_kakaxi: randomIntegerLocal(0, 3150),
-      size_kakaxi: randomIntegerLocal(25, 60),
-      color_kakaxi: colors[randomIntegerLocal(0, colors.length - 1)],
-    };
-  }
-
-  return {
-    on(eventName, handler) {
-      if (!handlers.has(eventName)) {
-        handlers.set(eventName, []);
-      }
-      handlers.get(eventName).push(handler);
-      return this;
-    },
-    emit(eventName, ...args) {
-      switch (eventName) {
-        case "spawn": {
-          const [x, y, name, skin, size] = args;
-
-          state.currentPlayer = 0;
-          state.players = [
-            {
-              name,
-              skin,
-              x,
-              y,
-              size,
-              score: 0,
-              side: 90,
-            },
-          ];
-
-          emitLocal("spawn_kakaxArr", state.kakaxas.slice());
-          emitLocal("number", state.currentPlayer);
-          emitLocal(
-            "spawn",
-            state.currentPlayer,
-            x,
-            y,
-            skin,
-            size,
-            clonePlayers()
-          );
-          emitLocal("score_update", clonePlayers());
-          break;
-        }
-        case "player_move": {
-          const [x, y, num] = args;
-
-          if (state.players[num]) {
-            state.players[num].x = x;
-            state.players[num].y = y;
-          }
-          break;
-        }
-        case "player_move_side": {
-          const [num, side] = args;
-          let deg = 0;
-
-          if (side === "left") {
-            deg = 270;
-          } else if (side === "right") {
-            deg = 90;
-          } else if (side === "down") {
-            deg = 180;
-          }
-
-          if (state.players[num]) {
-            state.players[num].side = deg;
-          }
-          emitLocal("player_move_side", num, deg);
-          break;
-        }
-        case "setChar": {
-          const [size, num] = args;
-
-          if (state.players[num]) {
-            state.players[num].size = size;
-          }
-          emitLocal("player_set_char", size, num);
-          break;
-        }
-        case "score_update": {
-          const [plus, num] = args;
-
-          if (state.players[num]) {
-            state.players[num].score += plus;
-          }
-          emitLocal("score_update", clonePlayers());
-          break;
-        }
-        case "player_hit":
-          emitLocal("animation_sword", state.currentPlayer);
-          break;
-        case "number":
-          emitLocal("number", state.currentPlayer);
-          break;
-        case "proverka":
-          emitLocal("porverka_na_kakaxy");
-          break;
-        case "kakaxa_disconnect": {
-          const [index] = args;
-
-          if (index >= 0 && index < state.kakaxas.length) {
-            state.kakaxas.splice(index, 1);
-          }
-          break;
-        }
-        default:
-          break;
-      }
-
-      return this;
-    },
-    connect() {
-      if (state.connected) {
-        return;
-      }
-
-      state.connected = true;
-      emitLocal("connect");
-
-      if (!state.kakaxaTimer) {
-        state.kakaxaTimer = window.setInterval(() => {
-          const kakaxa = createKakaxa();
-
-          state.kakaxas.push(kakaxa);
-          emitLocal("spawn_kakaxi", kakaxa);
-        }, 500);
-      }
-    },
-  };
-}
-
-// В desktop используем реальный socket.io, а в web-режиме включаем локальную single-player логику.
-const socket = IS_STATIC_WEB
-  ? createLocalSocket()
-  : io(window.location.origin, socket_config);
+// ip нужно указать своего компьютера !!
+const adress = "localhost";
+const port = 700;
+// создания сокета ( объекта подключения к серверу и обмена с ним сообщениями )
+const socket = io(`http://${adress}:${port}`, socket_config);
 
 // происходит автоматически по подключению к серверу
 socket.on("connect", () => {
@@ -204,20 +20,22 @@ socket.on("connect", () => {
     kakaxArray.splice(num, 1);
   });
   socket.on("animation_sword", (num) => {
-    if (num === my_num) {
-      return;
-    }
-    playSwordAnimation(player_field.children[num]);
+    player_field.children[
+      num
+    ].children[0].style.animation = `hit .5s linear forwards`;
+    setTimeout(() => {
+      player_field.children[num].children[0].style.animation = ``;
+    }, 501);
   });
   socket.on("porverka_na_kakaxy", () => {
     for (let i = 0; i < kakaxArray.length; i++) {
       let item = kakaxArray[i];
+      let player = playerElem.getBoundingClientRect();
       let x = player_x;
       let y = player_y;
-      const playerSize = getPlayerSize();
 
-      let player_x2 = x + playerSize;
-      let player_y2 = y + playerSize;
+      let player_x2 = x + player.width;
+      let player_y2 = y + player.width;
 
       let item_x = item.x_kakaxi;
       let item_y = item.y_kakaxi;
@@ -292,21 +110,20 @@ socket.on("connect", () => {
   socket.on("some_player_disconnect", (num, players) => {
     if (my_num === num && start2 != 0) {
       start3 = 0;
-      setStartRequestActive(false);
-      unbindGameControls();
-      stopMovement();
-      pauseOverlay.style.display = "none";
-      pauseBtn.style.display = "none";
-      gamePaused = false;
-      countdownActive = false;
-      if (countdownTimerId) {
-        clearTimeout(countdownTimerId);
-        countdownTimerId = null;
-      }
-      if (countdownElement) {
-        countdownElement.remove();
-        countdownElement = null;
-      }
+      document.removeEventListener("mousedown", mouseDown);
+      document.removeEventListener("mouseup", mouseUp);
+      document.removeEventListener("keydown", onKeydown);
+      document.removeEventListener("keyup", onKeyup);
+
+      cancelAnimationFrame(movingID);
+      cancelAnimationFrame(movingID2);
+      cancelAnimationFrame(movingID3);
+      cancelAnimationFrame(movingID4);
+
+      movingRight = false;
+      movingLeft = false;
+      movingUp = false;
+      movingBottom = false;
       beforeMenu.style.display = "flex";
       ui.style.display = "none";
       map.style.filter = "blur(55px)";
@@ -347,10 +164,7 @@ socket.on("connect", () => {
   });
   socket.on("spawn", (num, x, y, skin, size, players) => {
     my_num = num;
-    setStartRequestActive(false);
-    showGameplayScene();
     playerElem = firstCreatePlayer(x, y, skin, size);
-    startArenaTimer();
     // clearList();
     // setTimeout(() => {
     //   list(players);
@@ -389,28 +203,6 @@ socket.on("connect", () => {
 });
 
 socket.connect();
-const player_field = document.getElementById("player_field");
-const beforeMenu = document.getElementById("beforeMenu");
-const moneyBefore = document.getElementById("moneyBefore");
-const killBefore = document.getElementById("killBefore");
-const deathBefore = document.getElementById("deathBefore");
-const money_ui = document.getElementById("money_ui");
-const money = document.getElementById("money");
-const kill = document.getElementById("kill");
-const death = document.getElementById("death");
-const level = document.getElementById("level");
-const zapol1 = document.getElementById("zapol1");
-const zapol2 = document.getElementById("zapol2");
-const video_bg = document.getElementById("video_bg");
-const arenaViewport = document.getElementById("arenaViewport");
-const MAP_WIDTH = 5760;
-const MAP_HEIGHT = 3250;
-const MENU_BASE_WIDTH = 1700;
-const MENU_BASE_HEIGHT = 950;
-const BEFORE_MENU_BASE_WIDTH = 876;
-const BEFORE_MENU_BASE_HEIGHT = 620;
-const ARENA_BASE_WIDTH = 1700;
-const ARENA_BASE_HEIGHT = 950;
 let plusMoney = document.getElementById("plusMoney");
 let plusKills = document.getElementById("plusKills");
 let start3 = 0;
@@ -431,7 +223,9 @@ let player_x = 0;
 let player_y = 0;
 let world = document.querySelector(".map");
 exit.addEventListener("click", () => {
-  closeDesktopApp();
+  window.location.href = "https://www.google.com.ua/";
+  // window.close();
+  // socket.emit("exit");
 });
 let asd = 0;
 setInterval(() => {
@@ -448,357 +242,8 @@ let start = document.querySelector(".button-menu"),
   score_list = document.querySelector(".score_list"),
   kakaxiPole = document.querySelector(".kakaxi"),
   menu_block = document.querySelector(".menu-block");
-const beforeMenuPanel = document.querySelector(".in-before-menu");
-let controlsBound = false;
-let countdownActive = false;
-let countdownTimerId = null;
-let countdownElement = null;
-let startRequestActive = false;
-
-function setStartRequestActive(active) {
-  startRequestActive = active;
-  start.style.pointerEvents = active ? "none" : "auto";
-  start.style.opacity = active ? "0.7" : "1";
-}
-
-function showGameplayScene() {
-  video_bg.style.display = "none";
-  menu.style.display = "none";
-  beforeMenu.style.display = "none";
-  arenaViewport.style.display = "block";
-  ui.style.display = "block";
-  map.style.display = "block";
-  map.style.filter = "blur(0px)";
-  gif.style.display = "block";
-  pauseOverlay.style.display = "none";
-  pauseBtn.style.display = "none";
-  setArenaViewportActive(true);
-  money_ui.textContent = localStorage.getItem("money");
-  syncViewportLayout();
-}
-
-function setArenaViewportActive(active) {
-  html.style.width = "100%";
-  html.style.height = "100%";
-  body.style.width = "100%";
-  body.style.height = "100%";
-  body.style.overflow = "hidden";
-  arenaViewport.style.display = active ? "block" : "none";
-}
-
-function fitPanelToViewport(panel, baseWidth, baseHeight) {
-  if (!panel) {
-    return;
-  }
-
-  const scale = Math.min(
-    window.innerWidth / baseWidth,
-    window.innerHeight / baseHeight,
-    1
-  );
-
-  panel.style.transform = `scale(${scale})`;
-  panel.style.transformOrigin = "center center";
-}
-
-function fitArenaViewport() {
-  if (!arenaViewport) {
-    return;
-  }
-
-  const hudScale = Math.max(
-    0.64,
-    Math.min(window.innerWidth / ARENA_BASE_WIDTH, window.innerHeight / ARENA_BASE_HEIGHT, 1)
-  );
-
-  arenaViewport.style.width = `${window.innerWidth}px`;
-  arenaViewport.style.height = `${window.innerHeight}px`;
-  arenaViewport.style.setProperty("--hud-scale", hudScale.toFixed(4));
-}
-
-function getPlayerSize() {
-  if (!playerElem) {
-    return 150;
-  }
-
-  return playerElem.offsetWidth || playerElem.getBoundingClientRect().width || 150;
-}
-
-function getPlayerCollisionTarget() {
-  return playerElem || document.querySelector("#player_field .player");
-}
-
-function getRectCenter(rect) {
-  return {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2,
-  };
-}
-
-function getRectDistance(rectA, rectB) {
-  const centerA = getRectCenter(rectA);
-  const centerB = getRectCenter(rectB);
-  return Math.hypot(centerA.x - centerB.x, centerA.y - centerB.y);
-}
-
-function isMonsterTouchingPlayer(playerRect, monsterRect) {
-  const distance = getRectDistance(playerRect, monsterRect);
-  const playerRadius = Math.min(playerRect.width, playerRect.height) * 0.28;
-  const monsterRadius = Math.min(monsterRect.width, monsterRect.height) * 0.24;
-
-  return distance <= playerRadius + monsterRadius;
-}
-
-function rectanglesIntersect(rectA, rectB) {
-  return (
-    rectA.left < rectB.right &&
-    rectA.right > rectB.left &&
-    rectA.top < rectB.bottom &&
-    rectA.bottom > rectB.top
-  );
-}
-
-let activeWeaponHitbox = null;
-let activeWeaponHitboxTimer = null;
-
-function setActiveWeaponHitbox(hitbox) {
-  const expand = Math.max(55, 30 * rangeIncrease);
-
-  activeWeaponHitbox = {
-    left: Number(hitbox.x) - expand,
-    top: Number(hitbox.y) - expand,
-    right: Number(hitbox.x2) + expand,
-    bottom: Number(hitbox.y2) + expand,
-  };
-
-  if (activeWeaponHitboxTimer) {
-    clearTimeout(activeWeaponHitboxTimer);
-  }
-
-  activeWeaponHitboxTimer = setTimeout(() => {
-    activeWeaponHitbox = null;
-    activeWeaponHitboxTimer = null;
-  }, 240);
-}
-
-function getWeaponHitboxRect() {
-  const player = getPlayerCollisionTarget();
-
-  if (!player) {
-    return null;
-  }
-
-  const playerRect = player.getBoundingClientRect();
-  const playerWidth = playerRect.width;
-  const playerHeight = playerRect.height;
-  const sideReach = Math.max(260, playerWidth * (1.4 + rangeIncrease * 0.42));
-  const forwardReach = Math.max(240, playerHeight * (1.55 + rangeIncrease * 0.5));
-  const overlap = Math.max(55, playerWidth * 0.42);
-
-  switch (side) {
-    case "down":
-      return {
-        left: playerRect.left - (sideReach - playerWidth) / 2,
-        top: playerRect.bottom - overlap,
-        right: playerRect.left - (sideReach - playerWidth) / 2 + sideReach,
-        bottom: playerRect.bottom + forwardReach,
-      };
-    case "left":
-      return {
-        left: playerRect.left - forwardReach,
-        top: playerRect.top - (sideReach - playerHeight) / 2,
-        right: playerRect.left + overlap,
-        bottom: playerRect.top - (sideReach - playerHeight) / 2 + sideReach,
-      };
-    case "right":
-      return {
-        left: playerRect.right - overlap,
-        top: playerRect.top - (sideReach - playerHeight) / 2,
-        right: playerRect.right + forwardReach,
-        bottom: playerRect.top - (sideReach - playerHeight) / 2 + sideReach,
-      };
-    case "up":
-    default:
-      return {
-        left: playerRect.left - (sideReach - playerWidth) / 2,
-        top: playerRect.top - forwardReach,
-        right: playerRect.left - (sideReach - playerWidth) / 2 + sideReach,
-        bottom: playerRect.top + overlap,
-      };
-  }
-}
-
-function getMonsterMapRect(monster, monsterX, monsterY) {
-  const monsterSize =
-    parseFloat(monster.style.width) || monster.offsetWidth || 300;
-
-  return {
-    left: monsterX,
-    top: monsterY,
-    right: monsterX + monsterSize,
-    bottom: monsterY + monsterSize,
-  };
-}
-
-function isMonsterInWeaponHitbox(monster, monsterX, monsterY) {
-  const monsterMapRect = getMonsterMapRect(monster, monsterX, monsterY);
-
-  if (activeWeaponHitbox) {
-    return rectanglesIntersect(activeWeaponHitbox, monsterMapRect);
-  }
-
-  const weaponHitbox = getWeaponHitboxRect();
-
-  if (!weaponHitbox) {
-    return false;
-  }
-
-  const monsterRect = monster.getBoundingClientRect();
-  return rectanglesIntersect(weaponHitbox, monsterRect);
-}
-
-let playerDamageCooldownUntil = 0;
-
-function canMonsterDamagePlayer() {
-  return Date.now() >= playerDamageCooldownUntil;
-}
-
-function markMonsterDamageTaken() {
-  playerDamageCooldownUntil = Date.now() + 650;
-}
-
-function centerCamera() {
-  if (!playerElem || map.style.display === "none") {
-    return;
-  }
-
-  const viewportWidth = arenaViewport?.clientWidth || window.innerWidth;
-  const viewportHeight = arenaViewport?.clientHeight || window.innerHeight;
-  const playerSize = getPlayerSize();
-  const playerCenterX = player_x + playerSize / 2;
-  const playerCenterY = player_y + playerSize / 2;
-  const minCameraX = viewportWidth - MAP_WIDTH;
-  const minCameraY = viewportHeight - MAP_HEIGHT;
-  const cameraX = Math.min(
-    0,
-    Math.max(viewportWidth / 2 - playerCenterX, minCameraX)
-  );
-  const cameraY = Math.min(
-    0,
-    Math.max(viewportHeight / 2 - playerCenterY, minCameraY)
-  );
-
-  map.style.transform = `translate3d(${cameraX}px, ${cameraY}px, 0)`;
-}
-
-function syncViewportLayout() {
-  fitPanelToViewport(menu, MENU_BASE_WIDTH, MENU_BASE_HEIGHT);
-  fitPanelToViewport(
-    beforeMenuPanel,
-    BEFORE_MENU_BASE_WIDTH,
-    BEFORE_MENU_BASE_HEIGHT
-  );
-  fitArenaViewport();
-
-  if (playerElem && map.style.display !== "none") {
-    centerCamera();
-  }
-}
-
-function playSwordAnimation(playerNode) {
-  if (!playerNode) {
-    return;
-  }
-
-  const sword = playerNode.querySelector(".sword");
-
-  if (!sword) {
-    return;
-  }
-
-  if (sword._attackResetTimer) {
-    clearTimeout(sword._attackResetTimer);
-  }
-
-  sword.classList.remove("is-attacking");
-  void sword.offsetWidth;
-  sword.classList.add("is-attacking");
-  sword._attackResetTimer = setTimeout(() => {
-    sword.classList.remove("is-attacking");
-    sword._attackResetTimer = null;
-  }, 360);
-}
-
-function stopMovement() {
-  cancelAnimationFrame(movingID);
-  cancelAnimationFrame(movingID2);
-  cancelAnimationFrame(movingID3);
-  cancelAnimationFrame(movingID4);
-
-  movingRight = false;
-  movingLeft = false;
-  movingUp = false;
-  movingBottom = false;
-}
-
-function bindGameControls() {
-  if (controlsBound) {
-    return;
-  }
-
-  document.addEventListener("mousedown", mouseDown);
-  document.addEventListener("mouseup", mouseUp);
-  document.addEventListener("keydown", onKeydown);
-  document.addEventListener("keyup", onKeyup);
-  controlsBound = true;
-}
-
-function unbindGameControls() {
-  if (!controlsBound) {
-    return;
-  }
-
-  document.removeEventListener("mousedown", mouseDown);
-  document.removeEventListener("mouseup", mouseUp);
-  document.removeEventListener("keydown", onKeydown);
-  document.removeEventListener("keyup", onKeyup);
-  controlsBound = false;
-}
-
-function closeDesktopApp() {
-  if (IS_STATIC_WEB) {
-    window.location.href = WEB_HOME_URL;
-    return;
-  }
-
-  fetch("/__quit_app__", { method: "POST" }).catch(() => {
-    // Fallback for non-Electron launch.
-  });
-  window.setTimeout(() => {
-    window.close();
-  }, 40);
-}
-
-function keepMonsterInsideMap(monster, currentX, currentY) {
-  const monsterSize =
-    monster.offsetWidth || parseFloat(monster.style.width) || 300;
-  const maxX = Math.max(0, MAP_WIDTH - monsterSize);
-  const maxY = Math.max(0, MAP_HEIGHT - monsterSize);
-
-  return {
-    x: Math.min(Math.max(currentX, 0), maxX),
-    y: Math.min(Math.max(currentY, 0), maxY),
-  };
-}
-
-window.addEventListener("resize", syncViewportLayout);
-syncViewportLayout();
 
 start.addEventListener("click", () => {
-  if (startRequestActive) {
-    return;
-  }
-
   let ae = document.querySelector(".error");
   if (input.value === "") {
     if (!ae) {
@@ -815,29 +260,32 @@ start.addEventListener("click", () => {
     lvlprocent2 = 0;
     countForLvl = 0;
     rangeIncrease = 1;
-    start3 = 0;
+    start3 = 1;
     lvlprocent = 0;
     lvl = 1;
     level.textContent = lvl;
     playerStartCount++;
     start2++;
-    setStartRequestActive(true);
-    video_bg.style.display = "block";
-    menu.style.display = "flex";
-    ui.style.display = "none";
-    map.style.display = "none";
-    gif.style.display = "none";
-    pauseOverlay.style.display = "none";
-    pauseBtn.style.display = "none";
-    stopMovement();
-    unbindGameControls();
-    setArenaViewportActive(false);
-    window.scrollTo(0, 0);
-    syncViewportLayout();
+    video_bg.style.display = "none";
+    menu.style.display = "none";
+    ui.style.display = "block";
+    map.style.display = "block";
+    gif.style.display = "block";
+    html.style.width = "10000px";
+    html.style.height = "10000px";
+    body.style.width = "10000px";
+    body.style.height = "10000px";
     let skin = localStorage.getItem("skin");
+    money_ui.textContent = localStorage.getItem("money");
     let x = randomInteger(550, 5060);
     let y = randomInteger(550, 2500);
     socket.emit("spawn", x, y, input.value, skin, 150, playerStartCount);
+    setTimeout(() => {
+      document.addEventListener("mousedown", mouseDown);
+      document.addEventListener("mouseup", mouseUp);
+      document.addEventListener("keydown", onKeydown);
+      document.addEventListener("keyup", onKeyup);
+    }, 100);
   }
 });
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -891,7 +339,7 @@ function firstCreatePlayer(x, y, skin, size) {
   player_field.append(div);
   player_x = x;
   player_y = y;
-  centerCamera();
+  window.scrollTo(x + 1060 + 150, y + 2950);
   const sword = document.createElement("div");
   sword.classList.add("sword");
   sword.style.top = -100 + "%";
@@ -907,6 +355,7 @@ function firstCreatePlayer(x, y, skin, size) {
   sword.append(img2);
   return div;
 }
+
 
 function createPlayer(x, y, skin, size, side) {
   const div = document.createElement("div");
@@ -995,10 +444,21 @@ function mouseDown(e) {
 }
 
 function hit() {
-  stopMovement();
-  unbindGameControls();
-  const playerSize = getPlayerSize();
-  playSwordAnimation(playerElem);
+  cancelAnimationFrame(movingID);
+  cancelAnimationFrame(movingID2);
+  cancelAnimationFrame(movingID3);
+  cancelAnimationFrame(movingID4);
+
+  movingRight = false;
+  movingLeft = false;
+  movingUp = false;
+  movingBottom = false;
+
+  document.removeEventListener("mousedown", mouseDown);
+  document.removeEventListener("mouseup", mouseUp);
+  document.removeEventListener("keydown", onKeydown);
+  document.removeEventListener("keyup", onKeyup);
+  let playerElemBound = playerElem.getBoundingClientRect();
   // animationSword.style.animation = `hit 1.0s linear forwards`;
   // ! let div = null;
   switch (side) {
@@ -1006,8 +466,8 @@ function hit() {
       hitBlockf = {
         x: `${player_x - 50 * rangeIncrease}`,
         y: `${player_y - 160 * rangeIncrease}`,
-        x2: `${player_x + playerSize + 100 * rangeIncrease}`,
-        y2: `${player_y + playerSize + 150 * rangeIncrease}`,
+        x2: `${player_x + playerElemBound.width + 100 * rangeIncrease}`,
+        y2: `${player_y + playerElemBound.width + 150 * rangeIncrease}`,
       };
       // ? div = document.createElement("div");
       // ? div.style.position = "absolute";
@@ -1025,8 +485,8 @@ function hit() {
       hitBlockf = {
         x: `${player_x - 50 * rangeIncrease}`,
         y: `${player_y + 10 * rangeIncrease}`,
-        x2: `${player_x + playerSize + 100 * rangeIncrease}`,
-        y2: `${player_y + playerSize + 150 * rangeIncrease}`,
+        x2: `${player_x + playerElemBound.width + 100 * rangeIncrease}`,
+        y2: `${player_y + playerElemBound.width + 150 * rangeIncrease}`,
       };
       socket.emit("player_hit", hitBlockf, my_num, side);
       break;
@@ -1034,8 +494,8 @@ function hit() {
       hitBlockf = {
         x: `${player_x - 160 * rangeIncrease}`,
         y: `${player_y - 50 * rangeIncrease}`,
-        x2: `${player_x + playerSize + 150 * rangeIncrease}`,
-        y2: `${player_y + playerSize + 100 * rangeIncrease}`,
+        x2: `${player_x + playerElemBound.width + 150 * rangeIncrease}`,
+        y2: `${player_y + playerElemBound.width + 100 * rangeIncrease}`,
       };
       socket.emit("player_hit", hitBlockf, my_num, side);
       break;
@@ -1043,18 +503,18 @@ function hit() {
       hitBlockf = {
         x: `${player_x + 10 * rangeIncrease}`,
         y: `${player_y - 50 * rangeIncrease}`,
-        x2: `${player_x + playerSize + 100 * rangeIncrease}`,
-        y2: `${player_y + playerSize + 150 * rangeIncrease}`,
+        x2: `${player_x + playerElemBound.width + 100 * rangeIncrease}`,
+        y2: `${player_y + playerElemBound.width + 150 * rangeIncrease}`,
       };
       socket.emit("player_hit", hitBlockf, my_num, side);
       break;
   }
-  setActiveWeaponHitbox(hitBlockf);
   setTimeout(() => {
     mosey2 = false;
-    if (!countdownActive && !gamePaused && map.style.display !== "none") {
-      bindGameControls();
-    }
+    document.addEventListener("mousedown", mouseDown);
+    document.addEventListener("mouseup", mouseUp);
+    document.addEventListener("keydown", onKeydown);
+    document.addEventListener("keyup", onKeyup);
   }, 501);
 }
 
@@ -1145,14 +605,15 @@ function onKeyup(e) {
 }
 let side = "up";
 function moveRight() {
-  let player_x2 = player_x + getPlayerSize();
-  if (player_x2 >= MAP_WIDTH) {
+  let playerElemBound = playerElem.getBoundingClientRect();
+  let player_x2 = player_x + playerElemBound.width;
+  if (player_x2 >= 5760) {
     return null;
   } else {
     movingID = requestAnimationFrame(moveRight);
     player_x += step;
     playerElem.style.left = player_x + "px";
-    centerCamera();
+    window.scrollBy(step, 0);
     side = "right";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -1166,7 +627,7 @@ function moveLeft() {
     movingID2 = requestAnimationFrame(moveLeft);
     player_x -= step;
     playerElem.style.left = player_x + "px";
-    centerCamera();
+    window.scrollBy(-step, 0);
     side = "left";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -1174,14 +635,15 @@ function moveLeft() {
   }
 }
 function moveBottom() {
-  let player_y2 = player_y + getPlayerSize();
-  if (player_y2 >= MAP_HEIGHT) {
+  let playerElemBound = playerElem.getBoundingClientRect();
+  let player_y2 = player_y + playerElemBound.height;
+  if (player_y2 >= 3250) {
     return null;
   } else {
     movingID3 = requestAnimationFrame(moveBottom);
     player_y += step;
     playerElem.style.top = player_y + "px";
-    centerCamera();
+    window.scrollBy(0, step);
     side = "down";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -1195,7 +657,7 @@ function moveUp() {
     movingID4 = requestAnimationFrame(moveUp);
     player_y -= step;
     playerElem.style.top = player_y + "px";
-    centerCamera();
+    window.scrollBy(0, -step);
     side = "up";
     socket.emit("player_move", player_x, player_y, my_num, side);
     socket.emit("player_move_side", my_num, side);
@@ -1208,8 +670,8 @@ function moveUp() {
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 
-canvas.width = MAP_WIDTH;
-canvas.height = MAP_HEIGHT;
+canvas.width = 5760;
+canvas.height = 3250;
 
 let grid = [];
 let globalOffset = 1000;
@@ -1415,8 +877,10 @@ rightArrow.addEventListener("click", () => {
   }
   imgChoose.setAttribute("data-current", countForArrow);
   imgChoose.innerHTML = `<img src="../images/character${skins[countForArrow]}.png" class="img-choose" /> `;
+  
   localStorage.setItem("skin", skins[countForArrow]);
 });
+
 ////////////////////////////////////// Левел ///////////////////////////////////
 let lvl = 1;
 let lvlprocent = 0;
@@ -1541,65 +1005,65 @@ function plusExp(event) {
 function setCharacteristics(lvl) {
   if (lvl === 2) {
     step = 10;
+    window.scrollTo(player_x + 1060 + 165, player_y + 2950);
     playerElem.style.width = 162 + "px";
     playerElem.style.height = 162 + "px";
-    centerCamera();
     rangeIncrease = 1.1;
     socket.emit("setChar", 162, my_num);
   } else if (lvl === 3) {
     step = 9;
+    window.scrollTo(player_x + 1060 + 174, player_y + 2950);
     playerElem.style.width = 174 + "px";
     playerElem.style.height = 174 + "px";
-    centerCamera();
     rangeIncrease = 1.2;
     socket.emit("setChar", 174, my_num);
   } else if (lvl === 4) {
     step = 9;
+    window.scrollTo(player_x + 1060 + 186, player_y + 2950);
     playerElem.style.width = 186 + "px";
     playerElem.style.height = 186 + "px";
-    centerCamera();
     rangeIncrease = 1.3;
     socket.emit("setChar", 186, my_num);
   } else if (lvl === 5) {
     step = 8;
+    window.scrollTo(player_x + 1060 + 198, player_y + 2950);
     playerElem.style.width = 198 + "px";
     playerElem.style.height = 198 + "px";
-    centerCamera();
     rangeIncrease = 1.4;
     socket.emit("setChar", 198, my_num);
   } else if (lvl === 6) {
     step = 8;
+    window.scrollTo(player_x + 1060 + 210, player_y + 2950);
     playerElem.style.width = 210 + "px";
     playerElem.style.height = 210 + "px";
-    centerCamera();
     rangeIncrease = 1.5;
     socket.emit("setChar", 210, my_num);
   } else if (lvl === 7) {
     step = 7;
+    window.scrollTo(player_x + 1060 + 222, player_y + 2950);
     playerElem.style.width = 222 + "px";
     playerElem.style.height = 222 + "px";
-    centerCamera();
     rangeIncrease = 1.6;
     socket.emit("setChar", 222, my_num);
   } else if (lvl === 8) {
     step = 7;
+    window.scrollTo(player_x + 1060 + 234, player_y + 2950);
     playerElem.style.width = 234 + "px";
     playerElem.style.height = 234 + "px";
-    centerCamera();
     rangeIncrease = 1.7;
     socket.emit("setChar", 234, my_num);
   } else if (lvl === 9) {
     step = 6;
+    window.scrollTo(player_x + 1060 + 246, player_y + 2950);
     playerElem.style.width = 246 + "px";
     playerElem.style.height = 246 + "px";
-    centerCamera();
     rangeIncrease = 1.8;
     socket.emit("setChar", 246, my_num);
   } else if (lvl === "MAX") {
     step = 6;
+    window.scrollTo(player_x + 1060 + 258, player_y + 2950);
     playerElem.style.width = 258 + "px";
     playerElem.style.height = 258 + "px";
-    centerCamera();
     rangeIncrease = 1.9;
     socket.emit("setChar", 258, my_num);
   }
@@ -1627,20 +1091,6 @@ function setCharacteristics(lvl) {
 let beforeMenuBtn = document.querySelector(".menu-menu");
 beforeMenuBtn.addEventListener("click", () => {
   socket.emit("number");
-  start3 = 0;
-  setStartRequestActive(false);
-  unbindGameControls();
-  stopMovement();
-  gamePaused = false;
-  countdownActive = false;
-  if (countdownTimerId) {
-    clearTimeout(countdownTimerId);
-    countdownTimerId = null;
-  }
-  if (countdownElement) {
-    countdownElement.remove();
-    countdownElement = null;
-  }
   beforeMenu.style.display = "none";
   map.style.filter = "blur(0px)";
   video_bg.style.display = "block";
@@ -1648,11 +1098,10 @@ beforeMenuBtn.addEventListener("click", () => {
   ui.style.display = "none";
   map.style.display = "none";
   gif.style.display = "none";
-  pauseOverlay.style.display = "none";
-  pauseBtn.style.display = "none";
-  setArenaViewportActive(false);
-  window.scrollTo(0, 0);
-  syncViewportLayout();
+  html.style.width = "100%";
+  html.style.height = "100%";
+  body.style.width = "100%";
+  body.style.height = "100%";
   money.textContent = localStorage.getItem("money");
   kill.textContent = localStorage.getItem("kill");
   death.textContent = localStorage.getItem("death");
@@ -1710,23 +1159,7 @@ for(let i=0;i<3;i++){
 
 
 
-const MAX_PLAYER_HP = 6;
-const MONSTER_CONTACT_DAMAGE = {
-  monct0: 1,
-  monct1: 1,
-  monct2: 1,
-  monct3: 2,
-  monct4: 2,
-  monct5: 2,
-  monct6: 2,
-  monct7: 3,
-  arena: 1,
-};
-const MONSTER_SPECIAL_DAMAGE = {
-  monct1: 1,
-};
-
-let playerHP = MAX_PLAYER_HP;
+let playerHP = 6;
 let coins = Number(localStorage.getItem("money")) || 0;
 
 // 🔥 ДОБАВЬ ЭТО
@@ -1742,59 +1175,8 @@ setTimeout(() => {
   if(killEl) killEl.innerText = kills;
   if(deathEl) deathEl.innerText = deaths;
 }, 100);
-
 // 👇 дальше твой код
 let startHP = playerHP;
-
-function renderPlayerHearts() {
-  const heartsBox = document.querySelector(".hearts");
-
-  if (!heartsBox) {
-    return;
-  }
-
-  heartsBox.innerHTML = "";
-
-  for (let i = 0; i < playerHP; i++) {
-    const heart = document.createElement("img");
-    heart.src = "../images/stam111.png";
-    heart.className = "heart";
-    heartsBox.appendChild(heart);
-  }
-}
-
-function getMonsterDamage(monsterId, attackType = "contact") {
-  if (attackType === "special") {
-    return MONSTER_SPECIAL_DAMAGE[monsterId] || MONSTER_CONTACT_DAMAGE[monsterId] || 1;
-  }
-
-  return MONSTER_CONTACT_DAMAGE[monsterId] || 1;
-}
-
-function damagePlayer(amount) {
-  playerHP = Math.max(0, playerHP - amount);
-  renderPlayerHearts();
-  return playerHP;
-}
-
-function healPlayer(amount = 1) {
-  playerHP = Math.min(MAX_PLAYER_HP, playerHP + amount);
-  renderPlayerHearts();
-  return playerHP;
-}
-
-renderPlayerHearts();
-
-function monsterSpawnDelay(delay) {
-  return Math.max(800, Math.floor(delay * 0.8));
-}
-
-function getRandomMonsterSpawn(monsterSize) {
-  return {
-    x: randomInteger(0, Math.max(0, MAP_WIDTH - monsterSize)),
-    y: randomInteger(0, Math.max(0, MAP_HEIGHT - monsterSize)),
-  };
-}
 
 // ---------------- MONSTER ----------------
 
@@ -1806,9 +1188,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -1832,12 +1213,12 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct0");
+  let playerHP = 6;
 
   // движение и атака
   setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -1855,10 +1236,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -1867,10 +1244,9 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -1883,7 +1259,15 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -1922,21 +1306,120 @@ text.style.transition = "0.4s";
 
 gameOver.appendChild(text);
 
-
-// кнопка
+// -------- RESTART --------
 let btn = document.createElement("div");
 
 btn.innerText = "RESTART";
 btn.style.background = "#8db4d1";
-btn.style.padding = "14px 25px";
+btn.style.padding = "14px 30px";
 btn.style.border = "2px solid #4b6b80";
-btn.style.borderRadius = "10px";
+btn.style.borderRadius = "12px";
 btn.style.cursor = "pointer";
 btn.style.fontWeight = "bold";
 btn.style.fontSize = "18px";
-btn.style.zIndex = "1000000";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+// 🔥 СОХРАНЕНИЕ + RESTART
+btn.onclick = function(){
+
+  localStorage.setItem("money", coins);
+  localStorage.setItem("kill", kills);
+  localStorage.setItem("death", deaths);
+
+  location.reload();
+};
 
 gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- CONTINUE ЛОГИКА --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
 
 btn.onclick = function(){
 	// 💰 сохранить coins
@@ -1968,7 +1451,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -1979,7 +1462,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -2057,7 +1540,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = getPlayerCollisionTarget();
+  let player = document.querySelector("#player_field img");
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -2075,8 +1558,25 @@ setInterval(() => {
     ){
 
       heart.remove();
-      if(playerHP < MAX_PLAYER_HP){
-        healPlayer();
+
+      if(playerHP < 6){
+        playerHP++;
+
+        let heartsBox = document.querySelector(".hearts");
+
+        // полностью перерисовать HP
+        heartsBox.innerHTML = "";
+
+        for(let i = 0; i < playerHP; i++){
+
+          let hp = document.createElement("img");
+          hp.src = "../images/stam111.png";
+          hp.className = "heart";
+
+          heartsBox.appendChild(hp);
+
+        }
+
       }
 
     }
@@ -2110,7 +1610,7 @@ document.body.appendChild(victory);
 
   });
 
-}, monsterSpawnDelay(1000));
+},1000);
 // ---------------- MONSTER ----------------
 
 setTimeout(() => {
@@ -2121,9 +1621,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -2145,7 +1644,15 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct1");
+
+  // берём HP игрока, если он уже есть в игре
+  let currentPlayerHP = (typeof playerHP !== "undefined") ? playerHP : 6;
+
+  function syncPlayerHP(){
+    if(typeof playerHP !== "undefined"){
+      playerHP = currentPlayerHP;
+    }
+  }
 
   // ==========================
   // 💥 ВЗРЫВ
@@ -2204,7 +1711,7 @@ setTimeout(() => {
 
     let fireInterval = setInterval(() => {
 
-      let player = getPlayerCollisionTarget();
+      let player = document.querySelector("#player_field img");
       if(!player){
         clearInterval(fireInterval);
         fire.remove();
@@ -2232,9 +1739,19 @@ setTimeout(() => {
 
         clearInterval(fireInterval);
         fire.remove();
-      damagePlayer(contactDamage);
 
-        let playerEl = getPlayerCollisionTarget();
+        let hearts = document.querySelectorAll(".heart");
+
+        if(currentPlayerHP > 0){
+          currentPlayerHP--;
+          syncPlayerHP();
+
+          if(hearts[currentPlayerHP]){
+            hearts[currentPlayerHP].remove();
+          }
+        }
+
+        let playerEl = document.querySelector("#player_field img");
         if(playerEl){
           playerEl.style.filter = "brightness(0.3)";
           setTimeout(() => {
@@ -2242,7 +1759,7 @@ setTimeout(() => {
           }, 200);
         }
 
-        if(playerHP <= 0 && !window.gameOver){
+        if(currentPlayerHP <= 0 && !window.gameOver){
 
           deaths++;
           localStorage.setItem("death", deaths);
@@ -2316,7 +1833,7 @@ setTimeout(() => {
   // ==========================
   let pickHeartInterval = setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let heartsDrop = document.querySelectorAll(".dropHeart");
@@ -2334,8 +1851,15 @@ setTimeout(() => {
       ){
         heart.remove();
 
-        if(playerHP < MAX_PLAYER_HP){
-          healPlayer();
+        if(currentPlayerHP < 6){
+          currentPlayerHP++;
+          syncPlayerHP();
+
+          let hp = document.createElement("img");
+          hp.src = "../images/stam111.png";
+          hp.className = "heart";
+
+          document.querySelector(".hearts").appendChild(hp);
         }
       }
 
@@ -2359,7 +1883,7 @@ setTimeout(() => {
       return;
     }
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2377,10 +1901,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -2394,10 +1914,9 @@ setTimeout(() => {
   shootFireball(monsterX + 100, monsterY + 100);
 }
 
-if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+if(monster && monster.parentNode && distance < 120 && monsterCanHit){
 
   monsterCanHit = false;
-      markMonsterDamageTaken();
 
   // анимация атаки
   monster.style.transform = "scale(1.3)";
@@ -2411,7 +1930,17 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
     player.style.filter = "";
   },200);
 
-  damagePlayer(contactDamage);
+  let hearts = document.querySelectorAll(".heart");
+
+  // защита от багов
+  if(typeof playerHP !== "undefined" && playerHP > 0){
+
+    playerHP--;
+
+    if(hearts[playerHP]){
+      hearts[playerHP].remove();
+    }
+  }
 
   // смерть игрока
   if(typeof playerHP !== "undefined" && playerHP <= 0 && !window.gameOver){
@@ -2448,21 +1977,130 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
     text.style.transform = "scale(0)";
     text.style.transition = "0.4s";
 
-    gameOver.appendChild(text);
+gameOver.appendChild(text);
 
-    let btn = document.createElement("div");
+// -------- RESTART --------
+let btn = document.createElement("div");
 
-    btn.innerText = "RESTART";
-    btn.style.background = "#8db4d1";
-    btn.style.padding = "14px 25px";
-    btn.style.border = "2px solid #4b6b80";
-    btn.style.borderRadius = "10px";
-    btn.style.cursor = "pointer";
-    btn.style.fontWeight = "bold";
-    btn.style.fontSize = "18px";
+btn.innerText = "RESTART";
+btn.style.background = "#8db4d1";
+btn.style.padding = "14px 30px";
+btn.style.border = "2px solid #4b6b80";
+btn.style.borderRadius = "12px";
+btn.style.cursor = "pointer";
+btn.style.fontWeight = "bold";
+btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
 
-    gameOver.appendChild(btn);
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
 
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+btn.onclick = function(){
+
+  // 💥 БЕРЁМ АКТУАЛЬНЫЕ ДАННЫЕ (на всякий случай)
+  let currentCoins = coins;
+  let currentKills = kills;
+  let currentDeaths = deaths;
+
+  console.log("SAVE:", currentCoins, currentKills, currentDeaths);
+
+  // 💾 СОХРАНЯЕМ
+  localStorage.setItem("money", currentCoins);
+  localStorage.setItem("kill", currentKills);
+  localStorage.setItem("death", currentDeaths);
+
+  // 🔄 перезапуск
+  location.reload();
+};
+
+gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- CONTINUE ЛОГИКА --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
     btn.onclick = function(){
       localStorage.setItem("coins", coins);
       localStorage.setItem("kill", kills);
@@ -2481,6 +2119,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
 }
 
   }, 16);
+  
 
   // ---------------- УРОН ОТ МЕЧА ----------------
 
@@ -2489,7 +2128,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
     if(e.button !== 0) return;
     if(!monster.parentNode) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2500,7 +2139,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -2526,7 +2165,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
         console.log("Монстр убит");
 
         // награда в коинах
-        let lostHP = startHP - playerHP;
+        let lostHP = startHP - currentPlayerHP;
         let reward = 0;
 
         if(lostHP === 0){
@@ -2590,7 +2229,7 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
 
         let victory = document.createElement("div");
         victory.id = "roundVictory";
-        victory.innerText = "ROUND 2";
+        victory.innerText = "";
 
         document.body.appendChild(victory);
       }
@@ -2598,9 +2237,1264 @@ if(monster && monster.parentNode && isMonsterTouchingPlayer(playerRect, monsterR
 
   });
 
-}, monsterSpawnDelay(50000));
+}, 50000);
 
 
+// ---------------- MONSTER ----------------
+
+setTimeout(() => {
+
+  let monster = document.createElement("img");
+  monster.src = "../images/monct0.png";
+  monster.className = "monster";
+
+  document.querySelector(".map").appendChild(monster);
+
+ let monsterX = window.innerWidth - 150; // 👉 справа
+let monsterY = 300;
+
+
+  monster.style.position = "absolute";
+  monster.style.left = monsterX + "px";
+  monster.style.top = monsterY + "px";
+  monster.style.width = "300px";
+  monster.style.zIndex = "10";
+
+  // HP монстра
+  let monsterHP = 7;
+
+  let monsterHPText = document.createElement("div");
+  monsterHPText.style.position = "absolute";
+  monsterHPText.style.color = "white";
+  monsterHPText.style.fontSize = "22px";
+  monsterHPText.style.fontWeight = "bold";
+  monsterHPText.style.zIndex = "11";
+  monsterHPText.innerText = "HP: " + monsterHP;
+
+  document.querySelector(".map").appendChild(monsterHPText);
+
+  let monsterCanHit = true;
+
+  // берём HP игрока, если он уже есть в игре
+  let currentPlayerHP = (typeof playerHP !== "undefined") ? playerHP : 6;
+
+  function syncPlayerHP(){
+    if(typeof playerHP !== "undefined"){
+      playerHP = currentPlayerHP;
+    }
+  }
+
+  // ==========================
+  // 💥 ВЗРЫВ
+  // ==========================
+  function createExplosion(x, y){
+    let boom = document.createElement("div");
+
+    boom.style.position = "absolute";
+    boom.style.left = x + "px";
+    boom.style.top = y + "px";
+    boom.style.width = "80px";
+    boom.style.height = "80px";
+    boom.style.borderRadius = "50%";
+    boom.style.background = "radial-gradient(circle, #ffcc00, #ff3300, transparent)";
+    boom.style.zIndex = "50";
+    boom.style.pointerEvents = "none";
+
+    document.querySelector(".map").appendChild(boom);
+
+    boom.animate([
+      { transform: "scale(0.5)", opacity: 1 },
+      { transform: "scale(2)", opacity: 0 }
+    ], {
+      duration: 400,
+      easing: "ease-out"
+    });
+
+    setTimeout(() => {
+      boom.remove();
+    }, 400);
+  }
+
+  // ==========================
+  // 🔥 ОГНЕННЫЙ ШАР
+  // ==========================
+  function shootFireball(startX, startY){
+
+    let fire = document.createElement("div");
+
+    fire.style.position = "absolute";
+    fire.style.left = startX + "px";
+    fire.style.top = startY + "px";
+    fire.style.width = "20px";
+    fire.style.height = "20px";
+    fire.style.borderRadius = "50%";
+    fire.style.background = "orange";
+    fire.style.boxShadow = "0 0 20px red";
+    fire.style.zIndex = "20";
+    fire.style.pointerEvents = "none";
+
+    document.querySelector(".map").appendChild(fire);
+
+    let fireX = startX;
+    let fireY = startY;
+    let fireSpeed = 5;
+
+    let fireInterval = setInterval(() => {
+
+      let player = document.querySelector("#player_field img");
+      if(!player){
+        clearInterval(fireInterval);
+        fire.remove();
+        return;
+      }
+
+      let p = player.getBoundingClientRect();
+
+      let dx = p.left - fireX;
+      let dy = p.top - fireY;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+
+      if(dist > 1){
+        fireX += (dx / dist) * fireSpeed;
+        fireY += (dy / dist) * fireSpeed;
+      }
+
+      fire.style.left = fireX + "px";
+      fire.style.top = fireY + "px";
+
+      // попадание
+      if(dist < 50){
+
+        createExplosion(fireX, fireY);
+
+        clearInterval(fireInterval);
+        fire.remove();
+
+        let hearts = document.querySelectorAll(".heart");
+
+        if(currentPlayerHP > 0){
+          currentPlayerHP--;
+          syncPlayerHP();
+
+          if(hearts[currentPlayerHP]){
+            hearts[currentPlayerHP].remove();
+          }
+        }
+
+        let playerEl = document.querySelector("#player_field img");
+        if(playerEl){
+          playerEl.style.filter = "brightness(0.3)";
+          setTimeout(() => {
+            playerEl.style.filter = "";
+          }, 200);
+        }
+
+        if(currentPlayerHP <= 0 && !window.gameOver){
+
+          deaths++;
+          localStorage.setItem("death", deaths);
+
+          window.gameOver = true;
+          gamePaused = true;
+
+          let gameOver = document.createElement("div");
+          gameOver.style.position = "fixed";gameOver.style.top = "0";
+          gameOver.style.left = "0";
+          gameOver.style.width = "100%";
+          gameOver.style.height = "100%";
+          gameOver.style.background = "rgba(0,0,0,0.85)";
+          gameOver.style.display = "flex";
+          gameOver.style.flexDirection = "column";
+          gameOver.style.alignItems = "center";
+          gameOver.style.justifyContent = "center";
+          gameOver.style.zIndex = "999999";
+
+          document.body.appendChild(gameOver);
+
+          let text = document.createElement("div");
+          text.innerText = "YOU LOST";
+          text.style.fontSize = "80px";
+          text.style.color = "red";
+          text.style.fontWeight = "bold";
+          text.style.marginBottom = "40px";
+          text.style.transform = "scale(0)";
+          text.style.transition = "0.4s";
+
+          gameOver.appendChild(text);
+
+          let btn = document.createElement("div");
+          btn.innerText = "RESTART";
+          btn.style.background = "#8db4d1";
+          btn.style.padding = "14px 25px";
+          btn.style.border = "2px solid #4b6b80";
+          btn.style.borderRadius = "10px";
+          btn.style.cursor = "pointer";
+          btn.style.fontWeight = "bold";
+          btn.style.fontSize = "18px";
+          btn.style.zIndex = "1000000";
+
+          gameOver.appendChild(btn);
+
+          btn.onclick = function(){
+            localStorage.setItem("money", coins || 0);
+            localStorage.setItem("kill", kills || 0);
+            localStorage.setItem("death", deaths || 0);
+            location.reload();
+          };
+
+          setTimeout(() => {
+            text.style.transform = "scale(1)";
+          }, 50);
+        }
+      }
+
+    }, 16);
+
+    setTimeout(() => {
+      clearInterval(fireInterval);
+      if(fire.parentNode){
+        fire.remove();
+      }
+    }, 3000);
+  }
+
+  // ==========================
+  // ❤️ ПОДБОР СЕРДЦА
+  // ==========================
+  let pickHeartInterval = setInterval(() => {
+
+    let player = document.querySelector("#player_field img");
+    if(!player) return;
+
+    let heartsDrop = document.querySelectorAll(".dropHeart");
+
+    heartsDrop.forEach((heart) => {
+
+      let p = player.getBoundingClientRect();
+      let h = heart.getBoundingClientRect();
+
+      if(
+        p.left < h.right &&
+        p.right > h.left &&
+        p.top < h.bottom &&
+        p.bottom > h.top
+      ){
+        heart.remove();
+
+        if(currentPlayerHP < 6){
+          currentPlayerHP++;
+          syncPlayerHP();
+
+          let hp = document.createElement("img");
+          hp.src = "../images/stam111.png";
+          hp.className = "heart";
+
+          document.querySelector(".hearts").appendChild(hp);
+        }
+      }
+
+    });
+
+  }, 100);
+
+  // ==========================
+  // 🚶 ДВИЖЕНИЕ И АТАКА
+  // ==========================
+  let monsterMoveInterval = setInterval(() => {
+
+    if(window.gameOver){
+      clearInterval(monsterMoveInterval);
+      clearInterval(pickHeartInterval);
+      return;
+    }
+
+    if(!monster.parentNode) {
+      clearInterval(monsterMoveInterval);
+      return;
+    }
+
+    let player = document.querySelector("#player_field img");
+    if(!player) return;
+
+    let playerRect = player.getBoundingClientRect();
+    let monsterRect = monster.getBoundingClientRect();
+
+    let dx = (playerRect.x + 160) - monsterRect.x;
+    let dy = playerRect.y - monsterRect.y;
+
+    let distance = Math.sqrt(dx * dx + dy * dy);
+
+    let speed = 3;
+
+    if(distance > 1){
+      monsterX += (dx / distance) * speed;
+      monsterY += (dy / distance) * speed;
+    }
+
+    monster.style.left = monsterX + "px";
+    monster.style.top = monsterY + "px";
+
+    // позиция HP
+    monsterHPText.style.left = monsterX + "px";
+    monsterHPText.style.top = (monsterY - 30) + "px";
+
+    // рандомный огненный шар
+	 
+  if(distance < 250 && Math.random() < 0.02){
+  shootFireball(monsterX + 100, monsterY + 100);
+}
+
+if(monster && monster.parentNode && distance < 120 && monsterCanHit){
+
+  monsterCanHit = false;
+
+  // анимация атаки
+  monster.style.transform = "scale(1.3)";
+  setTimeout(()=>{
+    monster.style.transform = "scale(1)";
+  },200);
+
+  // эффект удара
+  player.style.filter = "brightness(0.4)";
+  setTimeout(()=>{
+    player.style.filter = "";
+  },200);
+
+  let hearts = document.querySelectorAll(".heart");
+
+  // защита от багов
+  if(typeof playerHP !== "undefined" && playerHP > 0){
+
+    playerHP--;
+
+    if(hearts[playerHP]){
+      hearts[playerHP].remove();
+    }
+  }
+
+  // смерть игрока
+  if(typeof playerHP !== "undefined" && playerHP <= 0 && !window.gameOver){
+
+    deaths++;
+    localStorage.setItem("death", deaths);
+
+    window.gameOver = true;
+    gamePaused = true;
+
+    let gameOver = document.createElement("div");
+
+    gameOver.style.position = "fixed";
+    gameOver.style.top = "0";
+    gameOver.style.left = "0";
+    gameOver.style.width = "100%";
+    gameOver.style.height = "100%";
+    gameOver.style.background = "rgba(0,0,0,0.85)";
+    gameOver.style.display = "flex";
+    gameOver.style.flexDirection = "column";
+    gameOver.style.alignItems = "center";
+    gameOver.style.justifyContent = "center";
+    gameOver.style.zIndex = "999999";
+
+    document.body.appendChild(gameOver);
+
+    let text = document.createElement("div");
+
+    text.innerText = "YOU LOST";
+    text.style.fontSize = "80px";
+    text.style.color = "red";
+    text.style.fontWeight = "bold";
+    text.style.marginBottom = "40px";
+    text.style.transform = "scale(0)";
+    text.style.transition = "0.4s";
+
+gameOver.appendChild(text);
+
+// -------- RESTART --------
+let btn = document.createElement("div");
+
+btn.innerText = "RESTART";
+btn.style.background = "#8db4d1";
+btn.style.padding = "14px 30px";
+btn.style.border = "2px solid #4b6b80";
+btn.style.borderRadius = "12px";
+btn.style.cursor = "pointer";
+btn.style.fontWeight = "bold";
+btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+btn.onclick = function(){
+
+  // 💥 БЕРЁМ АКТУАЛЬНЫЕ ДАННЫЕ (на всякий случай)
+  let currentCoins = coins;
+  let currentKills = kills;
+  let currentDeaths = deaths;
+
+  console.log("SAVE:", currentCoins, currentKills, currentDeaths);
+
+  // 💾 СОХРАНЯЕМ
+  localStorage.setItem("money", currentCoins);
+  localStorage.setItem("kill", currentKills);
+  localStorage.setItem("death", currentDeaths);
+
+  // 🔄 перезапуск
+  location.reload();
+};
+
+gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- CONTINUE ЛОГИКА --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
+    btn.onclick = function(){
+      localStorage.setItem("coins", coins);
+      localStorage.setItem("kill", kills);
+      localStorage.setItem("death", deaths);
+      location.reload();
+    };
+
+    setTimeout(()=>{
+      text.style.transform = "scale(1)";
+    },50);
+  }
+
+  setTimeout(()=>{
+    monsterCanHit = true;
+  },1000);
+}
+
+  }, 16);
+  
+
+  // ---------------- УРОН ОТ МЕЧА ----------------
+
+  document.addEventListener("mousedown", (e) => {
+
+    if(e.button !== 0) return;
+    if(!monster.parentNode) return;
+
+    let player = document.querySelector("#player_field img");
+    if(!player) return;
+
+    let playerRect = player.getBoundingClientRect();
+    let monsterRect = monster.getBoundingClientRect();
+
+    let dx = playerRect.x - monsterRect.x;
+    let dy = playerRect.y - monsterRect.y;
+
+    let distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance < 150){
+
+      monsterHP--;
+
+      monsterHPText.innerText = "HP: " + monsterHP;
+
+      monster.style.filter = "brightness(2)";
+      setTimeout(() => {
+        if(monster.parentNode){
+          monster.style.filter = "";
+        }
+      }, 150);
+
+      console.log("Монстр получил урон");
+
+      if(monsterHP <= 0){
+
+        kills++;
+        localStorage.setItem("kill", kills);
+
+        monster.remove();
+        monsterHPText.remove();
+
+        console.log("Монстр убит");
+
+        // награда в коинах
+        let lostHP = startHP - currentPlayerHP;
+        let reward = 0;
+
+        if(lostHP === 0){
+          reward = 30;
+        } else if(lostHP === 1){
+          reward = 20;
+        } else if(lostHP === 2){
+          reward = 10;
+        } else {
+          reward = 5;
+        }
+
+        coins += reward;
+        localStorage.setItem("money", coins);
+
+        let moneyUI = document.getElementById("money_ui");
+        if(moneyUI){
+          moneyUI.innerText = coins;
+        }
+
+        // монета
+        let coin = document.createElement("img");
+        coin.src = "../images/coin.png";
+        coin.style.position = "absolute";
+        coin.style.left = monsterX + "px";
+        coin.style.top = monsterY + "px";
+        coin.style.width = "50px";
+        coin.style.zIndex = "20";
+
+        document.querySelector(".map").appendChild(coin);
+
+        setTimeout(() => {
+          if(coin.parentNode){
+            coin.remove();
+          }
+        }, 5000);
+
+        // выпадение сердца
+        let heart = document.createElement("img");
+        heart.src = "../images/stam111.png";
+        heart.className = "dropHeart";
+        heart.style.position = "absolute";
+        heart.style.left = monsterX + "px";
+        heart.style.top = monsterY + "px";
+        heart.style.width = "60px";
+        heart.style.zIndex = "20";
+
+        document.querySelector(".map").appendChild(heart);
+
+        // вспышка
+        let flash = document.createElement("div");
+        flash.className = "flashEffect";
+        document.querySelector(".map").appendChild(flash);
+
+        setTimeout(() => {
+          flash.remove();
+        }, 400);
+
+        // взрыв
+        createExplosion(monsterX, monsterY);
+
+        let victory = document.createElement("div");
+        victory.id = "roundVictory";
+        victory.innerText = "";
+
+        document.body.appendChild(victory);
+      }
+    }
+
+  });
+
+}, 60000);
+// ---------------- MONSTER ----------------
+
+setTimeout(() => {
+
+  let monster = document.createElement("img");
+  monster.src = "../images/monct1.png";
+  monster.className = "monster";
+
+  document.querySelector(".map").appendChild(monster);
+
+  let monsterX = 500;
+  let monsterY = 300;
+
+  monster.style.position = "absolute";
+  monster.style.left = monsterX + "px";
+  monster.style.top = monsterY + "px";
+  monster.style.width = "300px";
+  monster.style.zIndex = "10";
+
+  // HP монстра
+  let monsterHP = 7;
+
+  let monsterHPText = document.createElement("div");
+  monsterHPText.style.position = "absolute";
+  monsterHPText.style.color = "white";
+  monsterHPText.style.fontSize = "22px";
+  monsterHPText.style.fontWeight = "bold";
+  monsterHPText.style.zIndex = "11";
+  monsterHPText.innerText = "HP: " + monsterHP;
+
+  document.querySelector(".map").appendChild(monsterHPText);
+
+  let monsterCanHit = true;
+
+  // берём HP игрока, если он уже есть в игре
+  let currentPlayerHP = (typeof playerHP !== "undefined") ? playerHP : 6;
+
+  function syncPlayerHP(){
+    if(typeof playerHP !== "undefined"){
+      playerHP = currentPlayerHP;
+    }
+  }
+
+  // ==========================
+  // 💥 ВЗРЫВ
+  // ==========================
+  function createExplosion(x, y){
+    let boom = document.createElement("div");
+
+    boom.style.position = "absolute";
+    boom.style.left = x + "px";
+    boom.style.top = y + "px";
+    boom.style.width = "80px";
+    boom.style.height = "80px";
+    boom.style.borderRadius = "50%";
+    boom.style.background = "radial-gradient(circle, #ffcc00, #ff3300, transparent)";
+    boom.style.zIndex = "50";
+    boom.style.pointerEvents = "none";
+
+    document.querySelector(".map").appendChild(boom);
+
+    boom.animate([
+      { transform: "scale(0.5)", opacity: 1 },
+      { transform: "scale(2)", opacity: 0 }
+    ], {
+      duration: 400,
+      easing: "ease-out"
+    });
+
+    setTimeout(() => {
+      boom.remove();
+    }, 400);
+  }
+
+  // ==========================
+  // 🔥 ОГНЕННЫЙ ШАР
+  // ==========================
+  function shootFireball(startX, startY){
+
+    let fire = document.createElement("div");
+
+    fire.style.position = "absolute";
+    fire.style.left = startX + "px";
+    fire.style.top = startY + "px";
+    fire.style.width = "20px";
+    fire.style.height = "20px";
+    fire.style.borderRadius = "50%";
+    fire.style.background = "orange";
+    fire.style.boxShadow = "0 0 20px red";
+    fire.style.zIndex = "20";
+    fire.style.pointerEvents = "none";
+
+    document.querySelector(".map").appendChild(fire);
+
+    let fireX = startX;
+    let fireY = startY;
+    let fireSpeed = 5;
+
+    let fireInterval = setInterval(() => {
+
+      let player = document.querySelector("#player_field img");
+      if(!player){
+        clearInterval(fireInterval);
+        fire.remove();
+        return;
+      }
+
+      let p = player.getBoundingClientRect();
+
+      let dx = p.left - fireX;
+      let dy = p.top - fireY;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+
+      if(dist > 1){
+        fireX += (dx / dist) * fireSpeed;
+        fireY += (dy / dist) * fireSpeed;
+      }
+
+      fire.style.left = fireX + "px";
+      fire.style.top = fireY + "px";
+
+      // попадание
+      if(dist < 50){
+
+        createExplosion(fireX, fireY);
+
+        clearInterval(fireInterval);
+        fire.remove();
+
+        let hearts = document.querySelectorAll(".heart");
+
+        if(currentPlayerHP > 0){
+          currentPlayerHP--;
+          syncPlayerHP();
+
+          if(hearts[currentPlayerHP]){
+            hearts[currentPlayerHP].remove();
+          }
+        }
+
+        let playerEl = document.querySelector("#player_field img");
+        if(playerEl){
+          playerEl.style.filter = "brightness(0.3)";
+          setTimeout(() => {
+            playerEl.style.filter = "";
+          }, 200);
+        }
+
+        if(currentPlayerHP <= 0 && !window.gameOver){
+
+          deaths++;
+          localStorage.setItem("death", deaths);
+
+          window.gameOver = true;
+          gamePaused = true;
+
+          let gameOver = document.createElement("div");
+          gameOver.style.position = "fixed";gameOver.style.top = "0";
+          gameOver.style.left = "0";
+          gameOver.style.width = "100%";
+          gameOver.style.height = "100%";
+          gameOver.style.background = "rgba(0,0,0,0.85)";
+          gameOver.style.display = "flex";
+          gameOver.style.flexDirection = "column";
+          gameOver.style.alignItems = "center";
+          gameOver.style.justifyContent = "center";
+          gameOver.style.zIndex = "999999";
+
+          document.body.appendChild(gameOver);
+
+          let text = document.createElement("div");
+          text.innerText = "YOU LOST";
+          text.style.fontSize = "80px";
+          text.style.color = "red";
+          text.style.fontWeight = "bold";
+          text.style.marginBottom = "40px";
+          text.style.transform = "scale(0)";
+          text.style.transition = "0.4s";
+
+          gameOver.appendChild(text);
+
+          let btn = document.createElement("div");
+          btn.innerText = "RESTART";
+          btn.style.background = "#8db4d1";
+          btn.style.padding = "14px 25px";
+          btn.style.border = "2px solid #4b6b80";
+          btn.style.borderRadius = "10px";
+          btn.style.cursor = "pointer";
+          btn.style.fontWeight = "bold";
+          btn.style.fontSize = "18px";
+          btn.style.zIndex = "1000000";
+
+          gameOver.appendChild(btn);
+
+          btn.onclick = function(){
+            localStorage.setItem("money", coins || 0);
+            localStorage.setItem("kill", kills || 0);
+            localStorage.setItem("death", deaths || 0);
+            location.reload();
+          };
+
+          setTimeout(() => {
+            text.style.transform = "scale(1)";
+          }, 50);
+        }
+      }
+
+    }, 16);
+
+    setTimeout(() => {
+      clearInterval(fireInterval);
+      if(fire.parentNode){
+        fire.remove();
+      }
+    }, 3000);
+  }
+
+  // ==========================
+  // ❤️ ПОДБОР СЕРДЦА
+  // ==========================
+  let pickHeartInterval = setInterval(() => {
+
+    let player = document.querySelector("#player_field img");
+    if(!player) return;
+
+    let heartsDrop = document.querySelectorAll(".dropHeart");
+
+    heartsDrop.forEach((heart) => {
+
+      let p = player.getBoundingClientRect();
+      let h = heart.getBoundingClientRect();
+
+      if(
+        p.left < h.right &&
+        p.right > h.left &&
+        p.top < h.bottom &&
+        p.bottom > h.top
+      ){
+        heart.remove();
+
+        if(currentPlayerHP < 6){
+          currentPlayerHP++;
+          syncPlayerHP();
+
+          let hp = document.createElement("img");
+          hp.src = "../images/stam111.png";
+          hp.className = "heart";
+
+          document.querySelector(".hearts").appendChild(hp);
+        }
+      }
+
+    });
+
+  }, 100);
+
+  // ==========================
+  // 🚶 ДВИЖЕНИЕ И АТАКА
+  // ==========================
+  let monsterMoveInterval = setInterval(() => {
+
+    if(window.gameOver){
+      clearInterval(monsterMoveInterval);
+      clearInterval(pickHeartInterval);
+      return;
+    }
+
+    if(!monster.parentNode) {
+      clearInterval(monsterMoveInterval);
+      return;
+    }
+
+    let player = document.querySelector("#player_field img");
+    if(!player) return;
+
+    let playerRect = player.getBoundingClientRect();
+    let monsterRect = monster.getBoundingClientRect();
+
+    let dx = playerRect.x - monsterRect.x;
+    let dy = playerRect.y - monsterRect.y;
+
+    let distance = Math.sqrt(dx * dx + dy * dy);
+
+    let speed = 3;
+
+    if(distance > 1){
+      monsterX += (dx / distance) * speed;
+      monsterY += (dy / distance) * speed;
+    }
+
+    monster.style.left = monsterX + "px";
+    monster.style.top = monsterY + "px";
+
+    // позиция HP
+    monsterHPText.style.left = monsterX + "px";
+    monsterHPText.style.top = (monsterY - 30) + "px";
+
+    // рандомный огненный шар
+	 
+  if(distance < 250 && Math.random() < 0.02){
+  shootFireball(monsterX + 100, monsterY + 100);
+}
+
+if(monster && monster.parentNode && distance < 120 && monsterCanHit){
+
+  monsterCanHit = false;
+
+  // анимация атаки
+  monster.style.transform = "scale(1.3)";
+  setTimeout(()=>{
+    monster.style.transform = "scale(1)";
+  },200);
+
+  // эффект удара
+  player.style.filter = "brightness(0.4)";
+  setTimeout(()=>{
+    player.style.filter = "";
+  },200);
+
+  let hearts = document.querySelectorAll(".heart");
+
+  // защита от багов
+  if(typeof playerHP !== "undefined" && playerHP > 0){
+
+    playerHP--;
+
+    if(hearts[playerHP]){
+      hearts[playerHP].remove();
+    }
+  }
+
+  // смерть игрока
+  if(typeof playerHP !== "undefined" && playerHP <= 0 && !window.gameOver){
+
+    deaths++;
+    localStorage.setItem("death", deaths);
+
+    window.gameOver = true;
+    gamePaused = true;
+
+    let gameOver = document.createElement("div");
+
+    gameOver.style.position = "fixed";
+    gameOver.style.top = "0";
+    gameOver.style.left = "0";
+    gameOver.style.width = "100%";
+    gameOver.style.height = "100%";
+    gameOver.style.background = "rgba(0,0,0,0.85)";
+    gameOver.style.display = "flex";
+    gameOver.style.flexDirection = "column";
+    gameOver.style.alignItems = "center";
+    gameOver.style.justifyContent = "center";
+    gameOver.style.zIndex = "999999";
+
+    document.body.appendChild(gameOver);
+
+    let text = document.createElement("div");
+
+    text.innerText = "YOU LOST";
+    text.style.fontSize = "80px";
+    text.style.color = "red";
+    text.style.fontWeight = "bold";
+    text.style.marginBottom = "40px";
+    text.style.transform = "scale(0)";
+    text.style.transition = "0.4s";
+
+gameOver.appendChild(text);
+
+// -------- RESTART --------
+let btn = document.createElement("div");
+
+btn.innerText = "RESTART";
+btn.style.background = "#8db4d1";
+btn.style.padding = "14px 30px";
+btn.style.border = "2px solid #4b6b80";
+btn.style.borderRadius = "12px";
+btn.style.cursor = "pointer";
+btn.style.fontWeight = "bold";
+btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+btn.onclick = function(){
+
+  // 💥 БЕРЁМ АКТУАЛЬНЫЕ ДАННЫЕ (на всякий случай)
+  let currentCoins = coins;
+  let currentKills = kills;
+  let currentDeaths = deaths;
+
+  console.log("SAVE:", currentCoins, currentKills, currentDeaths);
+
+  // 💾 СОХРАНЯЕМ
+  localStorage.setItem("money", currentCoins);
+  localStorage.setItem("kill", currentKills);
+  localStorage.setItem("death", currentDeaths);
+
+  // 🔄 перезапуск
+  location.reload();
+};
+
+gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- CONTINUE ЛОГИКА --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
+    btn.onclick = function(){
+      localStorage.setItem("coins", coins);
+      localStorage.setItem("kill", kills);
+      localStorage.setItem("death", deaths);
+      location.reload();
+    };
+
+    setTimeout(()=>{
+      text.style.transform = "scale(1)";
+    },50);
+  }
+
+  setTimeout(()=>{
+    monsterCanHit = true;
+  },1000);
+}
+
+  }, 16);
+  
+
+  // ---------------- УРОН ОТ МЕЧА ----------------
+
+  document.addEventListener("mousedown", (e) => {
+
+    if(e.button !== 0) return;
+    if(!monster.parentNode) return;
+
+    let player = document.querySelector("#player_field img");
+    if(!player) return;
+
+    let playerRect = player.getBoundingClientRect();
+    let monsterRect = monster.getBoundingClientRect();
+
+    let dx = playerRect.x - monsterRect.x;
+    let dy = playerRect.y - monsterRect.y;
+
+    let distance = Math.sqrt(dx*dx + dy*dy);
+
+    if(distance < 150){
+
+      monsterHP--;
+
+      monsterHPText.innerText = "HP: " + monsterHP;
+
+      monster.style.filter = "brightness(2)";
+      setTimeout(() => {
+        if(monster.parentNode){
+          monster.style.filter = "";
+        }
+      }, 150);
+
+      console.log("Монстр получил урон");
+
+      if(monsterHP <= 0){
+
+        kills++;
+        localStorage.setItem("kill", kills);
+
+        monster.remove();
+        monsterHPText.remove();
+
+        console.log("Монстр убит");
+
+        // награда в коинах
+        let lostHP = startHP - currentPlayerHP;
+        let reward = 0;
+
+        if(lostHP === 0){
+          reward = 30;
+        } else if(lostHP === 1){
+          reward = 20;
+        } else if(lostHP === 2){
+          reward = 10;
+        } else {
+          reward = 5;
+        }
+
+        coins += reward;
+        localStorage.setItem("money", coins);
+
+        let moneyUI = document.getElementById("money_ui");
+        if(moneyUI){
+          moneyUI.innerText = coins;
+        }
+
+        // монета
+        let coin = document.createElement("img");
+        coin.src = "../images/coin.png";
+        coin.style.position = "absolute";
+        coin.style.left = monsterX + "px";
+        coin.style.top = monsterY + "px";
+        coin.style.width = "50px";
+        coin.style.zIndex = "20";
+
+        document.querySelector(".map").appendChild(coin);
+
+        setTimeout(() => {
+          if(coin.parentNode){
+            coin.remove();
+          }
+        }, 5000);
+
+        // выпадение сердца
+        let heart = document.createElement("img");
+        heart.src = "../images/stam111.png";
+        heart.className = "dropHeart";
+        heart.style.position = "absolute";
+        heart.style.left = monsterX + "px";
+        heart.style.top = monsterY + "px";
+        heart.style.width = "60px";
+        heart.style.zIndex = "20";
+
+        document.querySelector(".map").appendChild(heart);
+
+        // вспышка
+        let flash = document.createElement("div");
+        flash.className = "flashEffect";
+        document.querySelector(".map").appendChild(flash);
+
+        setTimeout(() => {
+          flash.remove();
+        }, 400);
+
+        // взрыв
+        createExplosion(monsterX, monsterY);
+
+        let victory = document.createElement("div");
+        victory.id = "roundVictory";
+        victory.innerText = "ROUND 2 ";
+
+        document.body.appendChild(victory);
+      }
+    }
+
+  });
+
+}, 70000);
 
 
 // ---------------- MONSTER ----------------
@@ -2613,9 +3507,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -2639,12 +3532,12 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct2");
+  let playerHP = 6;
 
   // движение и атака
   setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2662,10 +3555,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -2674,10 +3563,9 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -2690,7 +3578,15 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -2729,19 +3625,116 @@ text.style.transition = "0.4s";
 gameOver.appendChild(text);
 
 
-// кнопка
+
+// -------- RESTART --------
 let btn = document.createElement("div");
 
 btn.innerText = "RESTART";
 btn.style.background = "#8db4d1";
-btn.style.padding = "14px 25px";
+btn.style.padding = "14px 30px";
 btn.style.border = "2px solid #4b6b80";
-btn.style.borderRadius = "10px";
+btn.style.borderRadius = "12px";
 btn.style.cursor = "pointer";
 btn.style.fontWeight = "bold";
 btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+// логика
+btn.onclick = function(){
+  location.reload();
+};
 
 gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- ЛОГИКА CONTINUE --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
 
 btn.onclick = function(){
 location.reload();
@@ -2767,7 +3760,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2778,7 +3771,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -2854,7 +3847,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = getPlayerCollisionTarget();
+  let player = document.querySelector("#player_field img");
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -2873,8 +3866,14 @@ setInterval(() => {
 
       heart.remove();
 
-       if(playerHP < MAX_PLAYER_HP){
-        healPlayer();
+       if(playerHP < 6){
+        playerHP++;
+
+        let hp = document.createElement("img");
+        hp.src = "../images/stam111.png";
+        hp.className = "heart";
+
+        document.querySelector(".hearts").appendChild(hp);
       }
 
     }
@@ -2907,7 +3906,7 @@ document.body.appendChild(victory);
 
   });
 
-}, monsterSpawnDelay(100000));
+},100000);
 
 // ---------------- MONSTER ----------------
 
@@ -2919,9 +3918,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -2945,12 +3943,12 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct3");
+  let playerHP = 6;
 
   // движение и атака
   setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -2968,10 +3966,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -2980,10 +3974,9 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -2996,7 +3989,15 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3035,19 +4036,116 @@ text.style.transition = "0.4s";
 gameOver.appendChild(text);
 
 
-// кнопка
+
+// -------- RESTART --------
 let btn = document.createElement("div");
 
 btn.innerText = "RESTART";
 btn.style.background = "#8db4d1";
-btn.style.padding = "14px 25px";
+btn.style.padding = "14px 30px";
 btn.style.border = "2px solid #4b6b80";
-btn.style.borderRadius = "10px";
+btn.style.borderRadius = "12px";
 btn.style.cursor = "pointer";
 btn.style.fontWeight = "bold";
 btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+// логика
+btn.onclick = function(){
+  location.reload();
+};
 
 gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- ЛОГИКА CONTINUE --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
 
 btn.onclick = function(){
 location.reload();
@@ -3073,7 +4171,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3084,7 +4182,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -3159,7 +4257,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = getPlayerCollisionTarget();
+  let player = document.querySelector("#player_field img");
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3177,8 +4275,16 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-      if(playerHP < MAX_PLAYER_HP){
-        healPlayer();
+
+      if(playerHP < 6){
+        playerHP++;
+
+        // добавить сердце в панель HP
+        let hp = document.createElement("img");
+        hp.src = "../images/stam111.png";
+        hp.className = "heart";
+
+        document.querySelector(".hearts").appendChild(hp);
       }
 
     }
@@ -3211,7 +4317,7 @@ document.body.appendChild(victory);
 
   });
 
-}, monsterSpawnDelay(150000));
+},150000);
 
 
 
@@ -3225,9 +4331,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -3251,12 +4356,12 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct4");
+  let playerHP = 6;
 
   // движение и атака
   setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3274,10 +4379,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -3286,10 +4387,9 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -3302,7 +4402,15 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3341,19 +4449,116 @@ text.style.transition = "0.4s";
 gameOver.appendChild(text);
 
 
-// кнопка
+
+// -------- RESTART --------
 let btn = document.createElement("div");
 
 btn.innerText = "RESTART";
 btn.style.background = "#8db4d1";
-btn.style.padding = "14px 25px";
+btn.style.padding = "14px 30px";
 btn.style.border = "2px solid #4b6b80";
-btn.style.borderRadius = "10px";
+btn.style.borderRadius = "12px";
 btn.style.cursor = "pointer";
 btn.style.fontWeight = "bold";
 btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+// логика
+btn.onclick = function(){
+  location.reload();
+};
 
 gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- ЛОГИКА CONTINUE --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
 
 btn.onclick = function(){
 location.reload();
@@ -3379,7 +4584,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3390,7 +4595,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -3465,7 +4670,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = getPlayerCollisionTarget();
+  let player = document.querySelector("#player_field img");
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3483,8 +4688,16 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-      if(playerHP < MAX_PLAYER_HP){
-        healPlayer();
+
+      if(playerHP < 6){
+        playerHP++;
+
+        // добавить сердце в панель HP
+        let hp = document.createElement("img");
+        hp.src = "../images/stam111.png";
+        hp.className = "heart";
+
+        document.querySelector(".hearts").appendChild(hp);
       }
 
     }
@@ -3517,7 +4730,7 @@ document.body.appendChild(victory);
 
   });
 
-}, monsterSpawnDelay(250000));
+},250000);
 
 
 // ---------------- MONSTER ----------------
@@ -3530,9 +4743,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -3556,12 +4768,12 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct5");
+  let playerHP = 6;
 
   // движение и атака
   setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3579,10 +4791,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -3591,10 +4799,9 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -3607,7 +4814,15 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3642,23 +4857,117 @@ text.style.fontWeight = "bold";
 text.style.marginBottom = "40px";
 text.style.transform = "scale(0)";
 text.style.transition = "0.4s";
-
 gameOver.appendChild(text);
 
-
-// кнопка
+// -------- RESTART --------
 let btn = document.createElement("div");
 
 btn.innerText = "RESTART";
 btn.style.background = "#8db4d1";
-btn.style.padding = "14px 25px";
+btn.style.padding = "14px 30px";
 btn.style.border = "2px solid #4b6b80";
-btn.style.borderRadius = "10px";
+btn.style.borderRadius = "12px";
 btn.style.cursor = "pointer";
 btn.style.fontWeight = "bold";
 btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+// логика
+btn.onclick = function(){
+  location.reload();
+};
 
 gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- ЛОГИКА CONTINUE --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
 
 btn.onclick = function(){
 location.reload();
@@ -3684,7 +4993,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3695,7 +5004,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -3770,7 +5079,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = getPlayerCollisionTarget();
+  let player = document.querySelector("#player_field img");
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -3788,8 +5097,16 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-      if(playerHP < MAX_PLAYER_HP){
-        healPlayer();
+
+      if(playerHP < 6){
+        playerHP++;
+
+        // добавить сердце в панель HP
+        let hp = document.createElement("img");
+        hp.src = "../images/stam111.png";
+        hp.className = "heart";
+
+        document.querySelector(".hearts").appendChild(hp);
       }
 
     }
@@ -3822,7 +5139,7 @@ document.body.appendChild(victory);
 
   });
 
-}, monsterSpawnDelay(300000));
+},300000);
 
 
 
@@ -3836,9 +5153,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -3862,12 +5178,12 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct6");
+  let playerHP = 6;
 
   // движение и атака
   setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -3885,10 +5201,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -3897,10 +5209,9 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -3913,7 +5224,15 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -3951,20 +5270,115 @@ text.style.transition = "0.4s";
 
 gameOver.appendChild(text);
 
-
-// кнопка
+// -------- RESTART --------
 let btn = document.createElement("div");
 
 btn.innerText = "RESTART";
 btn.style.background = "#8db4d1";
-btn.style.padding = "14px 25px";
+btn.style.padding = "14px 30px";
 btn.style.border = "2px solid #4b6b80";
-btn.style.borderRadius = "10px";
+btn.style.borderRadius = "12px";
 btn.style.cursor = "pointer";
 btn.style.fontWeight = "bold";
 btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+// логика
+btn.onclick = function(){
+  location.reload();
+};
 
 gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- ЛОГИКА CONTINUE --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
 
 btn.onclick = function(){
 location.reload();
@@ -3990,7 +5404,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4001,7 +5415,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -4076,7 +5490,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = getPlayerCollisionTarget();
+  let player = document.querySelector("#player_field img");
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -4094,8 +5508,16 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-      if(playerHP < MAX_PLAYER_HP){
-        healPlayer();
+
+      if(playerHP < 6){
+        playerHP++;
+
+        // добавить сердце в панель HP
+        let hp = document.createElement("img");
+        hp.src = "../images/stam111.png";
+        hp.className = "heart";
+
+        document.querySelector(".hearts").appendChild(hp);
       }
 
     }
@@ -4128,7 +5550,7 @@ document.body.appendChild(victory);
 
   });
 
-}, monsterSpawnDelay(400000));
+},400000);
 
 
 // ---------------- MONSTER ----------------
@@ -4141,9 +5563,8 @@ setTimeout(() => {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(300);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -4167,12 +5588,12 @@ setTimeout(() => {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("monct7");
+  let playerHP = 6;
 
   // движение и атака
   setInterval(() => {
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4190,10 +5611,6 @@ setTimeout(() => {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
     monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
@@ -4202,10 +5619,9 @@ setTimeout(() => {
     monsterHPText.style.top = (monsterY - 30) + "px";
 
     // атака монстра
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       // анимация атаки
       monster.style.transform = "scale(1.3)";
@@ -4218,7 +5634,15 @@ setTimeout(() => {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 if(playerHP <= 0 && !window.gameOver){
 deaths++;
 localStorage.setItem("death", deaths);
@@ -4256,20 +5680,115 @@ text.style.transition = "0.4s";
 
 gameOver.appendChild(text);
 
-
-// кнопка
+// -------- RESTART --------
 let btn = document.createElement("div");
 
 btn.innerText = "RESTART";
 btn.style.background = "#8db4d1";
-btn.style.padding = "14px 25px";
+btn.style.padding = "14px 30px";
 btn.style.border = "2px solid #4b6b80";
-btn.style.borderRadius = "10px";
+btn.style.borderRadius = "12px";
 btn.style.cursor = "pointer";
 btn.style.fontWeight = "bold";
 btn.style.fontSize = "18px";
+btn.style.width = "200px";
+btn.style.textAlign = "center";
+btn.style.marginTop = "10px";
+btn.style.transition = "0.2s";
+btn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+btn.onmouseover = function(){
+  btn.style.transform = "scale(1.07)";
+};
+
+btn.onmouseout = function(){
+  btn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+btn.onmousedown = function(){
+  btn.style.transform = "scale(0.95)";
+  btn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+btn.onmouseup = function(){
+  btn.style.transform = "scale(1.07)";
+  btn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+// логика
+btn.onclick = function(){
+  location.reload();
+};
 
 gameOver.appendChild(btn);
+
+
+// -------- CONTINUE --------
+let continueBtn = document.createElement("div");
+
+continueBtn.innerText = "CONTINUE";
+continueBtn.style.background = "#8db4d1";
+continueBtn.style.padding = "14px 30px";
+continueBtn.style.border = "2px solid #4b6b80";
+continueBtn.style.borderRadius = "12px";
+continueBtn.style.cursor = "pointer";
+continueBtn.style.fontWeight = "bold";
+continueBtn.style.fontSize = "18px";
+continueBtn.style.width = "200px";
+continueBtn.style.textAlign = "center";
+continueBtn.style.marginTop = "12px";
+continueBtn.style.transition = "0.2s";
+continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+
+// 🔥 HOVER
+continueBtn.onmouseover = function(){
+  continueBtn.style.transform = "scale(1.07)";
+};
+
+continueBtn.onmouseout = function(){
+  continueBtn.style.transform = "scale(1)";
+};
+
+// 🔥 CLICK
+continueBtn.onmousedown = function(){
+  continueBtn.style.transform = "scale(0.95)";
+  continueBtn.style.boxShadow = "0 2px 0 #4b6b80";
+};
+
+continueBtn.onmouseup = function(){
+  continueBtn.style.transform = "scale(1.07)";
+  continueBtn.style.boxShadow = "0 5px 0 #4b6b80";
+};
+
+gameOver.appendChild(continueBtn);
+
+
+// -------- ЛОГИКА CONTINUE --------
+continueBtn.onclick = function(){
+
+  gameOver.remove();
+
+  window.gameOver = false;
+  gamePaused = false;
+
+  // восстановить HP
+  playerHP = 6;
+
+  let heartsBox = document.querySelector(".hearts");
+
+  if(heartsBox){
+    heartsBox.innerHTML = "";
+
+    for(let i = 0; i < playerHP; i++){
+      let hp = document.createElement("img");
+      hp.src = "../images/stam111.png";
+      hp.className = "heart";
+      heartsBox.appendChild(hp);
+    }
+  }
+};
 
 btn.onclick = function(){
 location.reload();
@@ -4295,7 +5814,7 @@ text.style.transform = "scale(1)";
 
     if(e.button !== 0) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4306,7 +5825,7 @@ text.style.transform = "scale(1)";
 
     let distance = Math.sqrt(dx*dx + dy*dy);
 
-    if(isMonsterInWeaponHitbox(monster, monsterX, monsterY)){
+    if(distance < 150){
 
       monsterHP--;
 
@@ -4381,7 +5900,7 @@ document.querySelector(".map").appendChild(heart);
 
 setInterval(() => {
 
-  let player = getPlayerCollisionTarget();
+  let player = document.querySelector("#player_field img");
   if(!player) return;
 
   let hearts = document.querySelectorAll(".dropHeart");
@@ -4399,8 +5918,16 @@ setInterval(() => {
     ){
 
       heart.remove(); // убрать сердце
-      if(playerHP < MAX_PLAYER_HP){
-        healPlayer();
+
+      if(playerHP < 6){
+        playerHP++;
+
+        // добавить сердце в панель HP
+        let hp = document.createElement("img");
+        hp.src = "../images/stam111.png";
+        hp.className = "heart";
+
+        document.querySelector(".hearts").appendChild(hp);
       }
 
     }
@@ -4433,7 +5960,7 @@ document.body.appendChild(victory);
 
   });
 
-}, monsterSpawnDelay(450000));
+},450000);
 
 
 // ==========================
@@ -4520,7 +6047,7 @@ pauseBtn.style.height = "50px";
 pauseBtn.style.background = "#d9c9a3";
 pauseBtn.style.border = "3px solid #6b4f2a";
 pauseBtn.style.borderRadius = "10px";
-pauseBtn.style.display = "none";
+pauseBtn.style.display = "flex";
 pauseBtn.style.alignItems = "center";
 pauseBtn.style.justifyContent = "center";
 pauseBtn.style.fontSize = "24px";
@@ -4586,7 +6113,6 @@ pauseOverlay.appendChild(pauseMenu);
   });
 
 });
-
 // ==========================
 // 🔘 КНОПКИ
 // ==========================
@@ -4622,12 +6148,7 @@ pauseMenu.appendChild(exitBtn);
 // ==========================
 
 pauseBtn.onclick = function(){
-  if (countdownActive || map.style.display === "none") {
-    return;
-  }
 
-  stopMovement();
-  unbindGameControls();
   gamePaused = true;
   pauseOverlay.style.display = "flex";
 
@@ -4636,12 +6157,9 @@ pauseBtn.onclick = function(){
 
 // ▶️ ПРОДОЛЖИТЬ
 resumeBtn.onclick = function(){
+
   gamePaused = false;
   pauseOverlay.style.display = "none";
-  if (!countdownActive && map.style.display !== "none") {
-    bindGameControls();
-    centerCamera();
-  }
 
 };
 
@@ -4666,7 +6184,8 @@ soundBtn.onclick = function(){
 // 💾 СЕЙВ
 // ==========================
 
-function saveGameProgress() {
+saveBtn.onclick = function(){
+
   let save = {
     coins: typeof coins !== "undefined" ? coins : 0,
     kills: typeof kills !== "undefined" ? kills : 0,
@@ -4681,10 +6200,6 @@ function saveGameProgress() {
   localStorage.setItem("money", save.coins);
   localStorage.setItem("kill", save.kills);
   localStorage.setItem("death", save.deaths);
-}
-
-saveBtn.onclick = function(){
-  saveGameProgress();
 
   // уведомление
   let text = document.createElement("div");
@@ -4728,10 +6243,75 @@ if(load){
 // ==========================
 
 exitBtn.onclick = function(){
-  saveGameProgress();
   location.reload();
 };
+// ==========================
+// 💎 КРАСИВОЕ БОЛЬШОЕ МЕНЮ
+// ==========================
+setTimeout(() => {
 
+  // ===== МЕНЮ =====
+  pauseMenu.style.width = "380px";            // чуть больше
+  pauseMenu.style.padding = "30px";
+  pauseMenu.style.borderRadius = "22px";
+
+  pauseMenu.style.background = "linear-gradient(#f5e6c8, #e6d3a3)";
+  pauseMenu.style.border = "4px solid #8b6a3f";
+  pauseMenu.style.boxShadow = "0 15px 40px rgba(0,0,0,0.5)";
+
+  pauseMenu.style.display = "flex";
+  pauseMenu.style.flexDirection = "column";
+  pauseMenu.style.alignItems = "center";
+  pauseMenu.style.gap = "15px";
+
+  // ===== КНОПКИ =====
+  let buttons = pauseMenu.children;
+
+  for (let i = 0; i < buttons.length; i++) {
+
+    let btn = buttons[i];
+
+    btn.style.width = "260px";
+    btn.style.padding = "16px";
+    btn.style.fontSize = "19px";
+    btn.style.fontWeight = "bold";
+
+    btn.style.borderRadius = "14px";
+    btn.style.color = "#2c3e50";
+
+    // 🔥 красивый градиент
+    btn.style.background = "linear-gradient(#b9d8ef, #8fc0e3)";
+    btn.style.border = "2px solid #4b6b80";
+
+    // 🔥 мягкая тень
+    btn.style.boxShadow = "0 5px 0 #4b6b80";
+    btn.style.transition = "all 0.15s ease";
+
+    // ===== ХОВЕР =====
+    btn.onmouseover = () => {
+      btn.style.background = "linear-gradient(#d3ecff, #a9d3f5)";
+      btn.style.transform = "translateY(-2px)";
+    };
+
+    btn.onmouseout = () => {
+      btn.style.background = "linear-gradient(#b9d8ef, #8fc0e3)";
+      btn.style.transform = "translateY(0)";
+    };
+
+    // ===== НАЖАТИЕ =====
+    btn.onmousedown = () => {
+      btn.style.transform = "translateY(2px)";
+      btn.style.boxShadow = "0 2px 0 #4b6b80";
+    };
+
+    btn.onmouseup = () => {
+      btn.style.transform = "translateY(-2px)";
+      btn.style.boxShadow = "0 5px 0 #4b6b80";
+    };
+
+  }
+
+}, 100);
 
 
 // блок мыши (на всякий случай)
@@ -4762,77 +6342,62 @@ document.addEventListener("keydown", function(e){
 
 
 function startArenaTimer(){
-  start3 = 0;
-  stopMovement();
-  unbindGameControls();
-  countdownActive = true;
-  gamePaused = true;
-  pauseOverlay.style.display = "none";
-  pauseBtn.style.display = "none";
 
-  if (countdownTimerId) {
-    clearTimeout(countdownTimerId);
-    countdownTimerId = null;
-  }
+let timer = document.createElement("div");
 
-  if (countdownElement) {
-    countdownElement.remove();
-  }
+timer.style.position = "fixed";
+timer.style.top = "50%";
+timer.style.left = "50%";
+timer.style.transform = "translate(-50%, -50%)";
+timer.style.fontSize = "120px";
+timer.style.fontWeight = "bold";
+timer.style.color = "white";
+timer.style.zIndex = "1";
+timer.style.textShadow = "0 0 20px white";
 
-  countdownElement = document.createElement("div");
-  countdownElement.style.position = "fixed";
-  countdownElement.style.top = "50%";
-  countdownElement.style.left = "50%";
-  countdownElement.style.transform = "translate(-50%, -50%)";
-  countdownElement.style.fontSize = "120px";
-  countdownElement.style.fontWeight = "bold";
-  countdownElement.style.color = "white";
-  countdownElement.style.zIndex = "10001";
-  countdownElement.style.textShadow = "0 0 20px white";
+document.body.appendChild(timer);
 
-  document.body.appendChild(countdownElement);
+let time = 10;
 
-  const countdownSteps = ["3", "2", "1", "START!"];
-  let countdownIndex = 0;
+let interval = setInterval(()=>{
 
-  const showCountdownStep = () => {
-    if (!countdownElement) {
-      return;
-    }
+timer.innerText = time;
 
-    const label = countdownSteps[countdownIndex];
+time--;
 
-    countdownElement.innerText = label;
+if(time < 0){
 
-    if (label === "START!") {
-      countdownElement.style.color = "#00ff88";
-      countdownElement.style.fontSize = "140px";
-      countdownTimerId = window.setTimeout(() => {
-        if (countdownElement) {
-          countdownElement.remove();
-          countdownElement = null;
-        }
-        countdownTimerId = null;
-        countdownActive = false;
-        gamePaused = false;
-        start3 = 1;
-        if (map.style.display !== "none") {
-          pauseBtn.style.display = "flex";
-          bindGameControls();
-          centerCamera();
-        }
-      }, 900);
-      return;
-    }
+clearInterval(interval);
 
-    countdownElement.style.color = "white";
-    countdownElement.style.fontSize = "120px";
-    countdownIndex++;
-    countdownTimerId = window.setTimeout(showCountdownStep, 1000);
-  };
+timer.innerText = "START!";
 
-  showCountdownStep();
+timer.style.color = "#00ff88";
+timer.style.fontSize = "140px";
+
+setTimeout(()=>{
+timer.remove();
+},1500);
+
 }
+
+},1000);
+}
+
+
+
+let waitPlayer = setInterval(()=>{
+
+let player = document.querySelector("#player_field img");
+
+if(player){
+
+clearInterval(waitPlayer);
+
+startArenaTimer();
+
+}
+
+},500);
 
 function createMonster() {
 
@@ -4842,9 +6407,8 @@ function createMonster() {
 
   document.querySelector(".map").appendChild(monster);
 
-  const monsterSpawn = getRandomMonsterSpawn(200);
-  let monsterX = monsterSpawn.x;
-  let monsterY = monsterSpawn.y;
+  let monsterX = 500;
+  let monsterY = 300;
 
   monster.style.position = "absolute";
   monster.style.left = monsterX + "px";
@@ -4866,13 +6430,13 @@ function createMonster() {
   document.querySelector(".map").appendChild(monsterHPText);
 
   let monsterCanHit = true;
-  const contactDamage = getMonsterDamage("arena");
+  let playerHP = 3;
 
   setInterval(() => {
 
     if(gamePaused) return;
 
-    let player = getPlayerCollisionTarget();
+    let player = document.querySelector("#player_field img");
     if(!player) return;
 
     let playerRect = player.getBoundingClientRect();
@@ -4890,20 +6454,16 @@ function createMonster() {
       monsterY += (dy / distance) * speed;
     }
 
-    const boundedMonsterPosition = keepMonsterInsideMap(monster, monsterX, monsterY);
-    monsterX = boundedMonsterPosition.x;
-    monsterY = boundedMonsterPosition.y;
-
-    monster.style.left = monsterX + "px";
+   
+ monster.style.left = monsterX + "px";
     monster.style.top = monsterY + "px";
 
     monsterHPText.style.left = monsterX + "px";
     monsterHPText.style.top = (monsterY - 30) + "px";
 
-    if(isMonsterTouchingPlayer(playerRect, monsterRect) && monsterCanHit && canMonsterDamagePlayer()){
+    if(distance < 120 && monsterCanHit){
 
       monsterCanHit = false;
-      markMonsterDamageTaken();
 
       monster.style.transform = "scale(1.3)";
       setTimeout(()=>{
@@ -4914,7 +6474,15 @@ function createMonster() {
       setTimeout(()=>{
         player.style.filter = "";
       },200);
-      damagePlayer(contactDamage);
+
+      let hearts = document.querySelectorAll(".heart");
+
+      if(playerHP > 0){
+        playerHP--;
+        if(hearts[playerHP]){
+          hearts[playerHP].remove();
+        }
+      }
 
       if(playerHP <= 0){
         alert("Игрок проиграл");
@@ -5434,22 +7002,281 @@ setInterval(function(){
 
 
 
+
+
 // ==========================
-// 🎮 СТАРТ ИГРЫ (ВАЖНО)
+// ✔ "ВЫ УЖЕ КУПИЛИ" ДЛЯ КНОПКИ "ПРОДАНО"
 // ==========================
 
-let gameStarted = false;
+function showSold(){
 
-// ждём кнопку "Играть"
-window.addEventListener("load", () => {
+  let overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.background = "rgba(0,0,0,0.6)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = "9999";
 
-  let playBtn = document.querySelector(".button-menu");
+  let box = document.createElement("div");
+  box.innerText = "✔ Вы уже купили";
 
-  if(playBtn){
-    playBtn.addEventListener("click", () => {
-      gameStarted = true;
-      console.log("Игра началась");
-    });
+  box.style.background = "#f3e6c9";
+  box.style.border = "4px solid #6b4f2a";
+  box.style.borderRadius = "15px";
+  box.style.padding = "20px 40px";
+  box.style.fontSize = "22px";
+  box.style.fontWeight = "bold";
+  box.style.color = "#3b2a18";
+  box.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
+  box.style.transform = "scale(0.5)";
+  box.style.transition = "0.3s";
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    box.style.transform = "scale(1)";
+  }, 50);
+
+  overlay.onclick = function(){
+    overlay.remove();
+  };
+
+  setTimeout(() => {
+    overlay.remove();
+  }, 1500);
+}
+
+
+// ==========================
+// ЛОВИМ КЛИК ПО "ПРОДАНО"
+// ==========================
+
+document.addEventListener("click", function(e){
+
+  let btn = e.target;
+
+  if(btn.classList.contains("button-store") && btn.innerText.trim() === "Продано"){
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    showSold();
+  }
+
+}, true);
+
+
+
+
+
+// ==========================
+// 🔽 ЧУТЬ НИЖЕ КНОПКИ
+// ==========================
+
+window.addEventListener("load", function(){
+
+    let play = document.querySelector(".button-menu");
+    let exit = document.querySelector(".exit-menu");
+
+    if(play){
+        play.style.marginTop = "-2px"; // двигает вниз
+    }
+
+    if(exit){
+        exit.style.marginTop = "-1px";
+    }
+
+});
+
+
+
+
+// ==========================
+// 💾 СТАБИЛЬНОЕ СОХРАНЕНИЕ
+// ==========================
+
+(function(){
+
+  function saveGame(){
+    try{
+      localStorage.setItem("money", coins || 0);
+      localStorage.setItem("kill", kills || 0);
+      localStorage.setItem("death", deaths || 0);
+
+      // пробуем взять HP из глобального окна
+      if(typeof window.playerHP !== "undefined"){
+        localStorage.setItem("hp", window.playerHP);
+      }
+
+      console.log("💾 Сохранено");
+    }catch(e){
+      console.log("Ошибка сохранения", e);
+    }
+  }
+
+  // каждые 1 сек
+  setInterval(saveGame, 1000);
+
+  // 🔥 СОХРАНЕНИЕ ПРИ ПЕРЕЗАГРУЗКЕ
+  window.addEventListener("beforeunload", saveGame);
+
+})();
+
+
+
+// ===============================
+// 🎮 БЕЗОПАСНЫЕ АНИМАЦИИ
+// ===============================
+
+// 🧍‍♂️ ДЫХАНИЕ ИГРОКА
+setInterval(() => {
+
+  let player = document.querySelector("#player_field img");
+  if(!player) return;
+
+  // защита чтобы не ломало игру
+  if(window.gameOver) return;
+
+  player.style.transition = "0.2s";
+  player.style.transform = "scale(1.03)";
+
+  setTimeout(()=>{
+    if(player){
+      player.style.transform = "scale(1)";
+    }
+  },200);
+
+}, 700);
+
+
+// ⚔️ УДАР (БЕЗ ОШИБОК)
+document.addEventListener("mousedown", (e)=>{
+
+  if(e.button !== 0) return;
+
+  let player = document.querySelector("#player_field img");
+  if(!player) return;
+
+  // 💥 ПРОСТО ЭФФЕКТ УДАРА (без меча)
+  let rect = player.getBoundingClientRect();
+
+  let hit = document.createElement("div");
+
+  hit.style.position = "fixed";
+  hit.style.left = rect.left + "px";
+  hit.style.top = rect.top + "px";
+  hit.style.width = "50px";
+  hit.style.height = "50px";
+  hit.style.borderRadius = "50%";
+  hit.style.background = "radial-gradient(circle, yellow, red, transparent)";
+  hit.style.zIndex = "9999";
+  hit.style.pointerEvents = "none";
+
+  document.body.appendChild(hit);
+
+  setTimeout(()=>{
+    if(hit) hit.remove();
+  },150);
+
+});
+
+
+// 💢 ЭФФЕКТ ПРИ УДАРЕ ПО ИГРОКУ
+function playerHitEffect(){
+
+  let player = document.querySelector("#player_field img");
+  if(!player) return;
+
+  player.style.filter = "brightness(0.3)";
+
+  setTimeout(()=>{
+    if(player){
+      player.style.filter = "";
+    }
+  },150);
+}
+// ===============================
+// ⚔️ АНИМАЦИЯ + ЗВЁЗДОЧКИ (БЕЗ ШАРИКА)
+// ===============================
+
+document.addEventListener("mousedown", function(e){
+
+  if(e.button !== 0) return;
+
+  try{
+
+    let player = document.querySelector("#player_field img");
+    if(!player) return;
+
+    let sword = document.querySelector(".sword");
+
+    // ⚔️ анимация меча
+    if(sword){
+      sword.style.transform = "rotate(-30deg)";
+      setTimeout(function(){
+        sword.style.transform = "rotate(0deg)";
+      },150);
+    }
+
+    // ⭐ звёздочки
+    let rect = player.getBoundingClientRect();
+
+    for(let i = 0; i < 4; i++){
+
+      let star = document.createElement("div");
+      star.innerText = "✦";
+
+      star.style.position = "fixed";
+      star.style.left = rect.left + "px";
+      star.style.top = rect.top + "px";
+      star.style.color = "yellow";
+      star.style.fontSize = "20px";
+      star.style.zIndex = "9999";
+
+      document.body.appendChild(star);
+
+      let x = (Math.random()*60)-30;
+      let y = (Math.random()*60)-30;
+
+      setTimeout(function(){
+        star.style.transform = "translate("+x+"px,"+y+"px)";
+        star.style.opacity = "0";
+      },10);
+
+      setTimeout(function(){
+        star.remove();
+      },300);
+    }
+	
+
+  }catch(err){
+    console.log(err);
   }
 
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
